@@ -45,7 +45,7 @@ export default function ProtectedPage() {
         />
       </div>
       <div className="grid grid-cols-12 gap-4">
-        <Card className="col-span-12 md:col-span-4 flex justify-center items-center">
+        <Card className="col-span-12 md:h-full h-44 md:col-span-4 flex justify-center items-center">
           <FaPlusCircle
             onClick={onOpen}
             className="text-7xl text-primary cursor-pointer"
