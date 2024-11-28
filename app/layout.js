@@ -17,6 +17,7 @@ export const metadata = {
   description: "AI 번역 서비스",
 };
 
+
 export default async function RootLayout({ children }) {
   const supabase = await createClient();
   const {
