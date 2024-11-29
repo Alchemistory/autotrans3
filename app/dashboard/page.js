@@ -35,8 +35,10 @@ import {Spinner} from "@nextui-org/react";
 
 export default function ProtectedPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
+  const [titleKR, setTitleKR] = useState("");
+  const [titleEN, setTitleEN] = useState("");
+  const [authorKR, setAuthorKR] = useState("");
+  const [authorEN, setAuthorEN] = useState("");
   const [genre, setGenre] = useState([]);
   const [perspective, setPerspective] = useState("");
   const [page, setPage] = useState(1);
@@ -86,10 +88,11 @@ export default function ProtectedPage() {
 
   const handleAdd = async () => {
     const { data, error } = await supabase.from("books").insert({
-      title: title,
-      author: author,
+      titleKR: titleKR,
+      titleEN: titleEN,
+      authorKR: authorKR,
+      authorEN: authorEN,
       genre: genre,
-      perspective: perspective,
     });
     if (error) {
       toast.error("작품 추가에 실패했습니다.");
@@ -131,9 +134,9 @@ export default function ProtectedPage() {
           <Card className="col-span-12 md:col-span-4" key={index}>
             <CardHeader className="flex gap-3">
               <div className="w-full flex justify-center">
-                <Link href={`/articles/${index}`}>
+                <Link href={`/articles/${item.id}`}>
                   <div className="w-full">
-                    <p className="text-md text-center">{item.title}</p>
+                    <p className="text-md text-center">{item.titleKR}</p>
                     <p className="text-sm text-gray-500 text-center">총12매</p>
                   </div>
                 </Link>
@@ -184,23 +187,45 @@ export default function ProtectedPage() {
                 <div>
                   <h1 className="text-lg font-bold">
                     작품의 <span className="text-primary">제목</span>을
-                    입력해주세요
+                    입력해주세요(국문)
                   </h1>
                   <Input
                     type="text"
                     label=""
-                    onValueChange={(value) => setTitle(value)}
+                    onValueChange={(value) => setTitleKR(value)}
+                  />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold">
+                    작품의 <span className="text-primary">제목</span>을
+                    입력해주세요(영문)
+                  </h1>
+                  <Input
+                    type="text"
+                    label=""
+                    onValueChange={(value) => setTitleEN(value)}
                   />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold">
                     작품의 <span className="text-primary">저자</span>를
-                    입력해주세요
+                    입력해주세요(국문)
                   </h1>
                   <Input
                     type="text"
                     label=""
-                    onValueChange={(value) => setAuthor(value)}
+                    onValueChange={(value) => setAuthorKR(value)}
+                  />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold">
+                    작품의 <span className="text-primary">저자</span>를
+                    입력해주세요(영문)
+                  </h1>
+                  <Input
+                    type="text"
+                    label=""
+                    onValueChange={(value) => setAuthorEN(value)}
                   />
                 </div>
                 <div>
@@ -212,19 +237,19 @@ export default function ProtectedPage() {
                   <CheckboxGroup
                     orientation="horizontal"
                     color="primary"
-                    defaultValue={["game", "romance"]}
+                    defaultValue={["게임", "로맨스"]}
                     onValueChange={(value) => setGenre(value)}
                   >
-                    <Checkbox value="game">게임판타지</Checkbox>
-                    <Checkbox value="romance">로맨스</Checkbox>
-                    <Checkbox value="detective">추리</Checkbox>
-                    <Checkbox value="thriller">스릴러</Checkbox>
-                    <Checkbox value="horror">공포</Checkbox>
-                    <Checkbox value="sf">SF</Checkbox>
-                    <Checkbox value="comedy">코메디</Checkbox>
+                    <Checkbox value="게임">게임판타지</Checkbox>
+                    <Checkbox value="로맨스">로맨스</Checkbox>
+                    <Checkbox value="추리">추리</Checkbox>
+                    <Checkbox value="스릴러">스릴러</Checkbox>
+                    <Checkbox value="공포">공포</Checkbox>
+                    <Checkbox value="SF">SF</Checkbox>
+                    <Checkbox value="코메디">코메디</Checkbox>
                   </CheckboxGroup>
                 </div>
-                <div>
+                {/* <div>
                   <h1 className="text-lg font-bold">
                     <span className="text-primary">서술시점</span>을
                     선택해주세요
@@ -237,7 +262,7 @@ export default function ProtectedPage() {
                     <Radio value="perspective1">1인칭 시점</Radio>
                     <Radio value="perspective3">3인칭 시점</Radio>
                   </RadioGroup>
-                </div>
+                </div> */}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>

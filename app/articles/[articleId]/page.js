@@ -1,12 +1,107 @@
-import React from 'react'
+"use client";
+import React from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useEffect, useState } from "react";
+import { Image } from "@nextui-org/react";
+import { Spinner, Button, Tabs, Tab, Card, CardBody } from "@nextui-org/react";
+import { Chip,CardHeader, CardFooter, Divider, Link } from "@nextui-org/react";
 
-function page({ params }) {
-  const { articleId } = params;
+export default function Page({ params }) {
+  const unwrappedParams = React.use(params);
+  const { articleId } = unwrappedParams;
+  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(true);
+  const [article, setArticle] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("회차목록");
+
+  const getArticle = async () => {
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .eq("id", articleId)
+      .single();
+    setArticle(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    getArticle();
+  }, []);
+
+  console.log(article);
+
   return (
-    <div>
-      <h1>articleId: {articleId}</h1>
+    <div className="flex flex-col">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-screen">
+          <Spinner color="primary" />
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-row justify-between">
+            <div>
+              <p className="text-2xl text-start">{article?.titleKR}</p>
+              <p className="text-lg text-gray-500 text-start">
+                {article?.titleEN}
+              </p>
+              <p>{formatTimestamp(article?.created_at)}</p>
+            </div>
+            <div>
+              <Button color="primary">수정하기</Button>
+            </div>
+          </div>
+          <div className="flex flex-row w-full h-16 rounded-2xl my-5 border border-gray-200">
+            <div className="w-1/2 h-full relative  flex flex-col justify-center">
+              <p className="text-center">작가</p>
+              <p className="text-center">{article?.authorKR}</p>
+              <div className="absolute right-0 top-[15%] bottom-[15%] w-[1px] bg-gray-300"></div>
+            </div>
+            <div className="w-1/2 h-full  flex flex-col justify-center">
+              <p className="text-center">장르</p>
+              <p className="text-center">{article?.genre?.join(" | ")}</p>
+            </div>
+          </div>
+          <div className="w-full">
+            <Tabs fullWidth aria-label="Options" defaultSelectedKey={selectedTab} onSelectionChange={setSelectedTab}>
+              <Tab key="회차목록" title="회차목록"></Tab>
+              <Tab key="용어집" title="용어집"></Tab>
+              <Tab key="등장인물" title="등장인물"></Tab>
+            </Tabs>
+          </div>
+          <Button className="w-full my-5" color="primary">
+            회차 새로 만들기+
+          </Button>
+          <Card className="w-full h-24">
+            <CardBody className="flex flex-row justify-between items-center px-20">
+              <div>
+                <p>0화</p>
+                <p>프롤로그</p>
+              </div>
+              <div className="flex flex-row gap-5 justify-center items-center">
+                <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center" >
+                  <p>번역계획서</p>
+                  <Chip color="success">확정</Chip>
+                </div>
+                <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center">
+                  <p>감수보고서</p>
+                  <Chip color="warning">진행중</Chip>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </>
+      )}
     </div>
-  )
+  );
 }
 
-export default page
+const formatTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
