@@ -23,7 +23,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@nextui-org/react";
-import {Pagination} from "@nextui-org/react";
+import { Pagination } from "@nextui-org/react";
 
 import { CheckboxGroup, Checkbox } from "@nextui-org/react";
 import { RadioGroup, Radio } from "@nextui-org/react";
@@ -45,8 +45,8 @@ export default function ProtectedPage() {
         />
       </div>
       <div className="grid grid-cols-12 gap-4">
-        <Card className="col-span-12 md:h-full h-44 md:col-span-4 flex justify-center items-center">
-          <FaPlusCircle
+      <Card className="col-span-12 md:h-full h-44 md:col-span-4 flex justify-center items-center transition-all duration-300 hover:scale-105 hover:border-2 hover:border-primary">
+      <FaPlusCircle
             onClick={onOpen}
             className="text-7xl text-primary cursor-pointer"
           />
