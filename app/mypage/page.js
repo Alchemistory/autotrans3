@@ -43,8 +43,10 @@ function page() {
         placeholder="비밀번호를 입력해주세요"
         type="password"
       />
-
+      <div className="col-span-12 flex justify-center my-5">
       <Button color="primary">변경하기</Button>
+      </div>
+      
     </form>
   </>
   );

@@ -24,29 +24,105 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { Pagination } from "@nextui-org/react";
-
 import { CheckboxGroup, Checkbox } from "@nextui-org/react";
 import { RadioGroup, Radio } from "@nextui-org/react";
-
+import { useState, useEffect, useCallback } from "react";
 import { IoSearch } from "react-icons/io5";
 import { FaPlusCircle } from "react-icons/fa";
+import { createClient } from "@/utils/supabase/client";
+import { ToastContainer, toast } from 'react-toastify';
+import {Spinner} from "@nextui-org/react";
 
 export default function ProtectedPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [genre, setGenre] = useState([]);
+  const [perspective, setPerspective] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const itemsPerPage = 7;
+  const supabase = createClient();
+  const [items, setItems] = useState([]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
 
-  const items = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const getData = async () => {
+    setIsLoading(true);
+    let query = supabase
+      .from("books")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false });
+    
+    if (debouncedSearch) {
+      query = query.ilike('title', `%${debouncedSearch}%`);
+    }
+    
+    const { data, error, count } = await query.range(
+      (page - 1) * itemsPerPage,
+      page * itemsPerPage
+    );
+    
+    if (error) {
+      toast.error("작품 불러오기에 실패했습니다.");
+    } else {
+      setItems(data);
+      setTotalPage(Math.ceil(count / itemsPerPage));
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    getData();
+  }, [page, debouncedSearch]);
+
+  const handleAdd = async () => {
+    const { data, error } = await supabase.from("books").insert({
+      title: title,
+      author: author,
+      genre: genre,
+      perspective: perspective,
+    });
+    if (error) {
+      toast.error("작품 추가에 실패했습니다.");
+    } else {
+      toast.success("작품 추가에 성공했습니다.");
+      getData();
+    }
+  };
+
   return (
     <div className="">
+      <ToastContainer
+      autoClose={1000}
+        hideProgressBar={false}
+      position="top-center"
+      />
       <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-5">
         <Input
+          onValueChange={(value) => setSearch(value)}
           startContent={<IoSearch className="text-medium" />}
           type="email"
           label=""
         />
       </div>
-      <div className="grid grid-cols-12 gap-4">
-      <Card className="col-span-12 md:h-full h-44 md:col-span-4 flex justify-center items-center transition-all duration-300 hover:scale-105 hover:border-2 hover:border-primary">
-      <FaPlusCircle
+      {isLoading ? (
+        <div className="w-full h-[50vh] flex justify-center items-center">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+        <div className="grid grid-cols-12 gap-4">
+          <Card className="col-span-12 md:min-h-44 md:h-full h-44 md:col-span-4 flex justify-center items-center transition-all duration-300 hover:scale-105 hover:border-2 hover:border-primary">
+          <FaPlusCircle
             onClick={onOpen}
             className="text-7xl text-primary cursor-pointer"
           />
@@ -57,7 +133,7 @@ export default function ProtectedPage() {
               <div className="w-full flex justify-center">
                 <Link href={`/articles/${index}`}>
                   <div className="w-full">
-                    <p className="text-md text-center">양극의 소년</p>
+                    <p className="text-md text-center">{item.title}</p>
                     <p className="text-sm text-gray-500 text-center">총12매</p>
                   </div>
                 </Link>
@@ -88,8 +164,14 @@ export default function ProtectedPage() {
         ))}
       </div>
       <div className="flex justify-center w-full mt-5">
-        <Pagination total={10} initialPage={1} />
-      </div>
+        <Pagination
+          total={totalPage}
+          page={page}
+          onChange={(page) => setPage(page)}
+          />
+        </div>
+        </>
+      )}  
 
       <Modal size="2xl" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
@@ -104,14 +186,22 @@ export default function ProtectedPage() {
                     작품의 <span className="text-primary">제목</span>을
                     입력해주세요
                   </h1>
-                  <Input type="text" label="" />
+                  <Input
+                    type="text"
+                    label=""
+                    onValueChange={(value) => setTitle(value)}
+                  />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold">
                     작품의 <span className="text-primary">저자</span>를
                     입력해주세요
                   </h1>
-                  <Input type="text" label="" />
+                  <Input
+                    type="text"
+                    label=""
+                    onValueChange={(value) => setAuthor(value)}
+                  />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold">
@@ -123,6 +213,7 @@ export default function ProtectedPage() {
                     orientation="horizontal"
                     color="primary"
                     defaultValue={["game", "romance"]}
+                    onValueChange={(value) => setGenre(value)}
                   >
                     <Checkbox value="game">게임판타지</Checkbox>
                     <Checkbox value="romance">로맨스</Checkbox>
@@ -138,9 +229,13 @@ export default function ProtectedPage() {
                     <span className="text-primary">서술시점</span>을
                     선택해주세요
                   </h1>
-                  <RadioGroup defaultValue="inching1" orientation="horizontal">
-                    <Radio value="inching1">1인칭 시점</Radio>
-                    <Radio value="inching3">3인칭 시점</Radio>
+                  <RadioGroup
+                    defaultValue="perspective1"
+                    orientation="horizontal"
+                    onValueChange={(value) => setPerspective(value)}
+                  >
+                    <Radio value="perspective1">1인칭 시점</Radio>
+                    <Radio value="perspective3">3인칭 시점</Radio>
                   </RadioGroup>
                 </div>
               </ModalBody>
@@ -148,7 +243,13 @@ export default function ProtectedPage() {
                 <Button color="danger" variant="light" onPress={onClose}>
                   닫기
                 </Button>
-                <Button color="primary" onPress={onClose}>
+                <Button
+                  color="primary"
+                  onPress={() => {
+                    handleAdd();
+                    onClose();
+                  }}
+                >
                   확인
                 </Button>
               </ModalFooter>

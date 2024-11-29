@@ -9,8 +9,8 @@ import { NextUIProvider } from "@nextui-org/react";
 import Link from "next/link";
 import "./globals.css";
 import { createClient } from "@/utils/supabase/server";
-
 import SidebarComplete from "@/components/sidebar-complete";
+import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
   title: "AI 번역 서비스",
