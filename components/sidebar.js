@@ -30,7 +30,6 @@ const Sidebar = React.forwardRef(
     ref,
   ) => {
     const [selected, setSelected] = useState(defaultSelectedKey);
-    console.log('selected:',selected);
     const sectionClasses = {
       ...sectionClassesProp,
       base: cn(sectionClassesProp?.base, "w-full", {

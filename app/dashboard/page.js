@@ -49,6 +49,7 @@ export default function ProtectedPage() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [genreList, setGenreList] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -82,6 +83,21 @@ export default function ProtectedPage() {
       setIsLoading(false);
     }
   };
+
+  const getGenreList = async () => {
+    const { data, error } = await supabase.from("genreList").select("*");
+    if (error) {
+      toast.error("장르 불러오기에 실패했습니다.");
+    } else {
+      setGenreList(data);
+    }
+  }
+
+
+  useEffect(() => {
+    getGenreList();
+  }, []);
+
   useEffect(() => {
     getData();
   }, [page, debouncedSearch]);
@@ -137,7 +153,7 @@ export default function ProtectedPage() {
                 <Link href={`/articles/${item.id}`}>
                   <div className="w-full">
                     <p className="text-md text-center">{item.titleKR}</p>
-                    <p className="text-sm text-gray-500 text-center">총12매</p>
+                    <p className="text-sm text-gray-500 text-center">{item.titleEN}</p>
                   </div>
                 </Link>
               </div>
@@ -237,16 +253,12 @@ export default function ProtectedPage() {
                   <CheckboxGroup
                     orientation="horizontal"
                     color="primary"
-                    defaultValue={["게임", "로맨스"]}
+                    defaultValue={["게임판타지"]}
                     onValueChange={(value) => setGenre(value)}
                   >
-                    <Checkbox value="게임">게임판타지</Checkbox>
-                    <Checkbox value="로맨스">로맨스</Checkbox>
-                    <Checkbox value="추리">추리</Checkbox>
-                    <Checkbox value="스릴러">스릴러</Checkbox>
-                    <Checkbox value="공포">공포</Checkbox>
-                    <Checkbox value="SF">SF</Checkbox>
-                    <Checkbox value="코메디">코메디</Checkbox>
+                    {genreList.map((genre, index) => (
+                      <Checkbox value={genre.name}>{genre.name}</Checkbox>
+                    ))}
                   </CheckboxGroup>
                 </div>
                 {/* <div>

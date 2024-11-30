@@ -2,10 +2,30 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-import { Image } from "@nextui-org/react";
-import { Spinner, Button, Tabs, Tab, Card, CardBody } from "@nextui-org/react";
-import { Chip,CardHeader, CardFooter, Divider, Link } from "@nextui-org/react";
-
+import {
+  Image,
+  Input,
+  Chip,
+  CardHeader,
+  CardFooter,
+  Divider,
+  Link,
+  Card,
+  Spinner,
+  Tabs,
+  Tab,
+  CardBody,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+} from "@nextui-org/react";
+import { Textarea } from "@nextui-org/input";
+import ChapterList from "./components/ChapterList";
+import DictionaryList from "./components/DictionaryList";
 export default function Page({ params }) {
   const unwrappedParams = React.use(params);
   const { articleId } = unwrappedParams;
@@ -13,6 +33,7 @@ export default function Page({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState(null);
   const [selectedTab, setSelectedTab] = useState("회차목록");
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const getArticle = async () => {
     const { data, error } = await supabase
@@ -28,8 +49,6 @@ export default function Page({ params }) {
     getArticle();
   }, []);
 
-  console.log(article);
-
   return (
     <div className="flex flex-col">
       {isLoading ? (
@@ -44,7 +63,7 @@ export default function Page({ params }) {
               <p className="text-lg text-gray-500 text-start">
                 {article?.titleEN}
               </p>
-              <p>{formatTimestamp(article?.created_at)}</p>
+              <p>생성일 : {formatTimestamp(article?.created_at)}</p>
             </div>
             <div>
               <Button color="primary">수정하기</Button>
@@ -62,33 +81,19 @@ export default function Page({ params }) {
             </div>
           </div>
           <div className="w-full">
-            <Tabs fullWidth aria-label="Options" defaultSelectedKey={selectedTab} onSelectionChange={setSelectedTab}>
+            <Tabs
+              fullWidth
+              aria-label="Options"
+              defaultSelectedKey={selectedTab}
+              onSelectionChange={setSelectedTab}
+            >
               <Tab key="회차목록" title="회차목록"></Tab>
               <Tab key="용어집" title="용어집"></Tab>
               <Tab key="등장인물" title="등장인물"></Tab>
             </Tabs>
           </div>
-          <Button className="w-full my-5" color="primary">
-            회차 새로 만들기+
-          </Button>
-          <Card className="w-full h-24">
-            <CardBody className="flex flex-row justify-between items-center px-20">
-              <div>
-                <p>0화</p>
-                <p>프롤로그</p>
-              </div>
-              <div className="flex flex-row gap-5 justify-center items-center">
-                <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center" >
-                  <p>번역계획서</p>
-                  <Chip color="success">확정</Chip>
-                </div>
-                <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center">
-                  <p>감수보고서</p>
-                  <Chip color="warning">진행중</Chip>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+          {selectedTab === "회차목록" && <ChapterList articleId={articleId}></ChapterList>} 
+          {selectedTab === "용어집" && <DictionaryList articleId={articleId}></DictionaryList>}
         </>
       )}
     </div>
