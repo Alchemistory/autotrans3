@@ -24,7 +24,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { Textarea } from "@nextui-org/input";
-import ChapterList from "./components/ChapterList";
+import ChapterLists from "./components/ChapterLists";
 import DictionaryList from "./components/DictionaryList";
 export default function Page({ params }) {
   const unwrappedParams = React.use(params);

@@ -20,7 +20,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-export default function ChapterList({ articleId }) {
+export default function ChapterLists({ articleId }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [chapterNumber, setChapterNumber] = useState("");
   const [titleKR, setTitleKR] = useState("");
