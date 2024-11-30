@@ -23,9 +23,12 @@ import {
   Button,
   useDisclosure,
 } from "@nextui-org/react";
+
 import { Textarea } from "@nextui-org/input";
 import ChapterLists from "./components/ChapterLists";
 import DictionaryList from "./components/DictionaryList";
+import { ToastContainer, toast } from "react-toastify";
+
 export default function Page({ params }) {
   const unwrappedParams = React.use(params);
   const { articleId } = unwrappedParams;
@@ -33,6 +36,8 @@ export default function Page({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [article, setArticle] = useState(null);
   const [selectedTab, setSelectedTab] = useState("회차목록");
+  const [titleKR, setTitleKR] = useState("");
+  const [titleEN, setTitleEN] = useState("");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const getArticle = async () => {
@@ -42,12 +47,27 @@ export default function Page({ params }) {
       .eq("id", articleId)
       .single();
     setArticle(data);
+    setTitleKR(data?.titleKR);
+    setTitleEN(data?.titleEN);
     setIsLoading(false);
   };
 
   useEffect(() => {
     getArticle();
   }, []);
+
+  const handleEditTitle = async () => {
+    const { error } = await supabase.from("books").update({
+      titleKR: titleKR,
+      titleEN: titleEN,
+    }).eq("id", articleId);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("제목 수정 완료");
+      getArticle();
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -66,7 +86,7 @@ export default function Page({ params }) {
               <p>생성일 : {formatTimestamp(article?.created_at)}</p>
             </div>
             <div>
-              <Button color="primary">수정하기</Button>
+              <Button onPress={onOpen} color="primary">수정하기</Button>
             </div>
           </div>
           <div className="flex flex-row w-full h-16 rounded-2xl my-5 border border-gray-200">
@@ -92,10 +112,42 @@ export default function Page({ params }) {
               <Tab key="등장인물" title="등장인물"></Tab>
             </Tabs>
           </div>
-          {selectedTab === "회차목록" && <ChapterList articleId={articleId}></ChapterList>} 
-          {selectedTab === "용어집" && <DictionaryList articleId={articleId}></DictionaryList>}
+          {selectedTab === "회차목록" && (
+            <ChapterLists articleId={articleId}></ChapterLists>
+          )}
+          {selectedTab === "용어집" && (
+            <DictionaryList articleId={articleId}></DictionaryList>
+          )}
         </>
       )}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                제목 수정하기
+              </ModalHeader>
+              <ModalBody>
+                <h1>제목(한글)</h1>
+                <Input className="w-full" value={titleKR} onValueChange={(value) => setTitleKR(value)}></Input>
+                <h1>제목(영문)</h1>
+                <Input className="w-full" value={titleEN} onValueChange={(value) => setTitleEN(value)}></Input>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  취소
+                </Button>
+                <Button color="primary" onPress={()=>{
+                  onClose();
+                  handleEditTitle();
+                }}>
+                  확인
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
