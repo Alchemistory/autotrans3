@@ -28,6 +28,7 @@ export default function ChapterList({ articleId }) {
   const [contents, setContents] = useState("");
   const [chapterList, setChapterList] = useState([]);
 
+  
   const supabase = createClient();
 
   const getChapterList = async () => {
