@@ -174,25 +174,26 @@ export default function DictionaryList({ articleId }) {
   };
 
   return (
-    <div>
+    <div className="w-full h-full flex flex-col justify-center items-center">
       <ToastContainer
         autoClose={1000}
         hideProgressBar={false}
         position="top-center"
       />
-      <div className="my-5 w-full  flex-row justify-between items-center gap-x-5 grid grid-cols-12">
-        <Input
-          onValueChange={(value) => setSearchText(value)}
-          startContent={<IoSearch className="text-medium" />}
-          type="text"
-          label=""
-          classNames={{
-            base: "col-span-4",
-            inputWrapper: "h-12",
-          }}
-        />
+      <div className="my-5 w-full flex-col md:flex-row justify-between items-center gap-x-5 grid grid-cols-12">
+        <div className="col-span-12 md:col-span-4">
+          <Input
+            onValueChange={(value) => setSearchText(value)}
+            startContent={<IoSearch className="text-medium" />}
+            type="text"
+            label=""
+            classNames={{
+              inputWrapper: "h-8 md:h-12",
+            }}
+          />
+        </div>
 
-        <div className="col-span-6 flex-row gap-x-5 my-5 grid grid-cols-3">
+        <div className="col-span-12 md:col-span-6 flex-row gap-x-5 mb-5 md:mb-0 grid grid-cols-3">
           <Select
             variant="underlined"
             label="대분류"
@@ -224,20 +225,26 @@ export default function DictionaryList({ articleId }) {
             ))}
           </Select>
         </div>
-        <div className="col-span-2 w-full ">
+        <div className="col-span-12 md:col-span-2 w-full ">
           <Button
             size="md"
             color="primary"
             onPress={onOpen1}
-            className="w-full h-12"
+            className="w-full  h-8 md:h-12"
           >
             단어 추가
           </Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table aria-label="Example static collection table " shadow="none">
+      <div className="w-[70vw] md:w-full flex justify-center overflow-x-auto">
+        <Table
+          aria-label="Example static collection table"
+          shadow="none"
+          classNames={{
+            wrapper: "p-0",
+          }}
+        >
           <TableHeader>
             <TableColumn className="text-center w-1/6 whitespace-nowrap overflow-hidden text-ellipsis">
               한글

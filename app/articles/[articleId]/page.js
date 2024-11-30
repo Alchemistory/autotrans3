@@ -27,7 +27,6 @@ import {
 import { Textarea } from "@nextui-org/input";
 import ChapterLists from "./components/ChapterLists";
 import DictionaryList from "./components/DictionaryList";
-import { ToastContainer, toast } from "react-toastify";
 
 export default function Page({ params }) {
   const unwrappedParams = React.use(params);
@@ -77,7 +76,7 @@ export default function Page({ params }) {
         </div>
       ) : (
         <>
-          <div className="flex flex-row justify-between">
+          <div className="flex flex-col md:flex-row  justify-between">
             <div>
               <p className="text-2xl text-start">{article?.titleKR}</p>
               <p className="text-lg text-gray-500 text-start">
@@ -85,8 +84,8 @@ export default function Page({ params }) {
               </p>
               <p>생성일 : {formatTimestamp(article?.created_at)}</p>
             </div>
-            <div>
-              <Button onPress={onOpen} color="primary">수정하기</Button>
+            <div className="flex justify-center items-center my-3 md:my-0">
+              <Button onPress={onOpen} className="h-8 md:h-12" color="primary">수정하기</Button>
             </div>
           </div>
           <div className="flex flex-row w-full h-16 rounded-2xl my-5 border border-gray-200">
@@ -113,10 +112,10 @@ export default function Page({ params }) {
             </Tabs>
           </div>
           {selectedTab === "회차목록" && (
-            <ChapterLists articleId={articleId}></ChapterLists>
+            <ChapterLists className="w-full h-full" articleId={articleId}></ChapterLists>
           )}
           {selectedTab === "용어집" && (
-            <DictionaryList articleId={articleId}></DictionaryList>
+            <DictionaryList className="w-full h-full" articleId={articleId}></DictionaryList>
           )}
         </>
       )}

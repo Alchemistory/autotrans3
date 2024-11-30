@@ -73,7 +73,7 @@ export default function ChapterLists({ articleId }) {
   }, []);
 
   return (
-    <div>
+    <div className="w-full h-full">
       <ToastContainer
         autoClose={1000}
         hideProgressBar={false}
@@ -85,18 +85,14 @@ export default function ChapterLists({ articleId }) {
       <div className="flex flex-col gap-5">
       {chapterList.map((chapter, index) => (
         <Card className="w-full h-24" key={index}>
-          <CardBody className="flex flex-row justify-between items-center px-20">
+          <CardBody className="flex flex-row justify-between items-center px-5 md:px-20">
             <div>
                 <p>{chapter.chapterNumber}화</p>
               <p>{chapter.titleKR}</p>
             </div>
           <div className="flex flex-row gap-5 justify-center items-center">
-            <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center">
-              <p>번역계획서</p>
-              <Chip color="success">확정</Chip>
-            </div>
-            <div className="flex flex-row gap-x-5 border border-gray-200 rounded-full py-3 px-5 justify-center items-center">
-              <p>감수보고서</p>
+            
+            <div className="flex">
               <Chip color="warning">진행중</Chip>
             </div>
           </div>

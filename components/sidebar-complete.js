@@ -110,8 +110,8 @@ export default function SidebarComplete({ userServer, children }) {
       >
         {content}
       </SidebarDrawer>
-      <div className="w-full h-full flex-col p-4 grid grid-rows-10 bg-gray-100">
-        <header className=" flex row-span-1 items-center gap-2 rounded-medium border-small border-divider px-4 bg-white">
+      <div className="w-full h-full flex-col p-4 grid grid-rows-10 bg-gray-100 ">
+        <header className="w-full flex row-span-1 items-center gap-2 rounded-medium border-small border-divider px-4 bg-white">
           <Button
             isIconOnly
             className="flex sm:hidden"
@@ -128,7 +128,7 @@ export default function SidebarComplete({ userServer, children }) {
           </Button>
           <h2 className="text-medium font-medium text-default-700">Overview</h2>
         </header>
-        <main className="row-span-9 flex-1 flex mt-4">
+        <main className="row-span-9 mt-4 min-h-0">
           <div className="w-full h-full rounded-medium border-small border-divider p-6 overflow-auto bg-white">
             {children}
           </div>
