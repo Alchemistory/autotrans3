@@ -25,9 +25,9 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { ToastContainer, toast } from "react-toastify";
-import { debounce } from 'lodash';
+import { debounce } from "lodash";
 
-export default function DictionaryList() {
+export default function DictionaryList({ articleId }) {
   const [categoryListLarge, setCategoryListLarge] = useState([]);
   const [categoryListMiddle, setCategoryListMiddle] = useState([]);
   const [categoryListSmall, setCategoryListSmall] = useState([]);
@@ -69,7 +69,12 @@ export default function DictionaryList() {
   };
 
   const getDictionaryList = async () => {
-    let query = supabase.from("dictionaryList").select("*").order("created_at", { ascending: false });
+    let query = supabase
+      .from("dictionaryList")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .eq("booksId", articleId);
+
     if (searchLargeCategory) {
       query = query.eq("categoryLarge", searchLargeCategory);
     }
@@ -80,7 +85,9 @@ export default function DictionaryList() {
       query = query.eq("categorySmall", searchSmallCategory);
     }
     if (searchText) {
-      query = query.or(`titleKR.ilike.%${searchText}%,titleEN.ilike.%${searchText}%`);
+      query = query.or(
+        `titleKR.ilike.%${searchText}%,titleEN.ilike.%${searchText}%`
+      );
     }
     const { data, error } = await query;
     if (error) {
@@ -136,7 +143,10 @@ export default function DictionaryList() {
   };
 
   const handleDeleteWord = async (id) => {
-    const { error } = await supabase.from("dictionaryList").delete().eq("id", id);
+    const { error } = await supabase
+      .from("dictionaryList")
+      .delete()
+      .eq("id", id);
     if (error) {
       toast.error(error.message);
     } else {
@@ -145,13 +155,16 @@ export default function DictionaryList() {
     }
   };
   const handleEditWord = async (item) => {
-    const { data, error } = await supabase.from("dictionaryList").update({
-      titleKR: titleKR,
-      titleEN: titleEN,
-      categoryLarge: selectedLargeCategory,
-      categoryMiddle: selectedMiddleCategory,
-      categorySmall: selectedSmallCategory,
-    }).eq("id", selectedId);
+    const { data, error } = await supabase
+      .from("dictionaryList")
+      .update({
+        titleKR: titleKR,
+        titleEN: titleEN,
+        categoryLarge: selectedLargeCategory,
+        categoryMiddle: selectedMiddleCategory,
+        categorySmall: selectedSmallCategory,
+      })
+      .eq("id", selectedId);
     if (error) {
       toast.error(error.message);
     } else {
@@ -264,18 +277,26 @@ export default function DictionaryList() {
                   {item.categorySmall}
                 </TableCell>
                 <TableCell className="text-center whitespace-nowrap overflow-hidden text-ellipsis">
-                  <Button variant="light" color="success" onPress={() => {
-                    onOpen2()
-                    setSelectedId(item.id)
-                    setTitleKR(item.titleKR)
-                    setTitleEN(item.titleEN)
-                    setSelectedLargeCategory(item.categoryLarge)
-                    setSelectedMiddleCategory(item.categoryMiddle)
-                    setSelectedSmallCategory(item.categorySmall)
-                  }}>
+                  <Button
+                    variant="light"
+                    color="success"
+                    onPress={() => {
+                      onOpen2();
+                      setSelectedId(item.id);
+                      setTitleKR(item.titleKR);
+                      setTitleEN(item.titleEN);
+                      setSelectedLargeCategory(item.categoryLarge);
+                      setSelectedMiddleCategory(item.categoryMiddle);
+                      setSelectedSmallCategory(item.categorySmall);
+                    }}
+                  >
                     수정
                   </Button>
-                  <Button variant="light" color="danger" onPress={() => handleDeleteWord(item.id)}>
+                  <Button
+                    variant="light"
+                    color="danger"
+                    onPress={() => handleDeleteWord(item.id)}
+                  >
                     삭제
                   </Button>
                 </TableCell>
