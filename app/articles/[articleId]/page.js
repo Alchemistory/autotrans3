@@ -27,7 +27,7 @@ import {
 import { Textarea } from "@nextui-org/input";
 import ChapterLists from "./components/ChapterLists";
 import DictionaryList from "./components/DictionaryList";
-
+import CharacterList from "./components/CharacterList";
 export default function Page({ params }) {
   const unwrappedParams = React.use(params);
   const { articleId } = unwrappedParams;
@@ -108,7 +108,7 @@ export default function Page({ params }) {
             >
               <Tab key="회차목록" title="회차목록"></Tab>
               <Tab key="용어집" title="용어집"></Tab>
-              <Tab key="등장인물" title="등장인물"></Tab>
+              <Tab key="캐릭터" title="캐릭터"></Tab>
             </Tabs>
           </div>
           {selectedTab === "회차목록" && (
@@ -116,6 +116,9 @@ export default function Page({ params }) {
           )}
           {selectedTab === "용어집" && (
             <DictionaryList className="w-full h-full" articleId={articleId}></DictionaryList>
+          )}
+          {selectedTab === "캐릭터" && (
+            <CharacterList className="w-full h-full" articleId={articleId}></CharacterList>
           )}
         </>
       )}

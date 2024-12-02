@@ -67,7 +67,7 @@ export default function ProtectedPage() {
       .order("created_at", { ascending: false });
     
     if (debouncedSearch) {
-      query = query.ilike('title', `%${debouncedSearch}%`);
+      query = query.or(`titleKR.ilike.%${debouncedSearch}%,titleEN.ilike.%${debouncedSearch}%`);
     }
     
     const { data, error, count } = await query.range(
@@ -257,7 +257,7 @@ export default function ProtectedPage() {
                     onValueChange={(value) => setGenre(value)}
                   >
                     {genreList.map((genre, index) => (
-                      <Checkbox value={genre.name}>{genre.name}</Checkbox>
+                      <Checkbox key={index} value={genre.name}>{genre.name}</Checkbox>
                     ))}
                   </CheckboxGroup>
                 </div>
