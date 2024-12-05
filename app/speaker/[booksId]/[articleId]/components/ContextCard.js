@@ -23,6 +23,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { ToastContainer, toast } from "react-toastify";
 import { usePathname } from "next/navigation";
+import SpeakerModal from "./SpeakerModal";
+import { FaPlus, FaMinus } from "react-icons/fa";
 
 function ContextCard({ isFixed, booksId, chapterId }) {
   const supabase = createClient();
@@ -248,7 +250,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                         value={item.text || ""}
                       />
                     </div>
-                    <div className="col-span-12 flex flex-row justify-end items-center gap-x-5 mt-3">
+                    <div className="col-span-12 flex flex-row justify-end items-center gap-x-5 mt-3 mr-3">
                       <button
                         onClick={() => {
                           const newItem = {
@@ -272,7 +274,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                           setData(newData);
                         }}
                       >
-                        <FaCirclePlus className="text-4xl text-primary" />
+                        {/* <FaCirclePlus className="text-4xl text-primary" /> */}
+                        <FaPlus className="text-xl text-gray-500" />
                       </button>
                       <button
                         className="min-w-0 p-0"
@@ -285,7 +288,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                           setData(newData);
                         }}
                       >
-                        <FaCircleMinus className="text-4xl text-danger-500" />
+                        {/* <FaCircleMinus className="text-4xl text-danger-500" /> */}
+                        <FaMinus className="text-xl text-gray-500" />
                       </button>
                     </div>
                   </CardBody>
@@ -295,13 +299,15 @@ function ContextCard({ isFixed, booksId, chapterId }) {
           ))
       )}
       <div className="flex flex-row justify-end my-5 gap-x-5">
-        <Button onClick={() => router.back()} color="danger" variant="light">
+        <Button onClick={() => router.back()} color="" variant="light">
           뒤로
         </Button>
         <Button onClick={handleSaveData} color="primary">
           저장
         </Button>
-        <Button className="text-white" color="success">
+        <SpeakerModal />
+
+        <Button color="primary" className="text-white" >
           확정
         </Button>
       </div>

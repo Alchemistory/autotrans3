@@ -48,7 +48,7 @@ export default async function page({ params }) {
         </div>
       </div>
       <ContextCard isFixed={isFixed} booksId={booksId} chapterId={articleId}></ContextCard>
-
+      
 
     </div>
   );
