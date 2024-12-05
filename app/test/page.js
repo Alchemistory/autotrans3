@@ -1,26 +1,47 @@
-import React from "react";
 
-function page() {
+'use client'
+import {Select, SelectItem} from "@nextui-org/react";
+
+const animals = [
+  {key: "cat", label: "Cat"},
+  {key: "dog", label: "Dog"},
+  {key: "elephant", label: "Elephant"},
+  {key: "lion", label: "Lion"},
+  {key: "tiger", label: "Tiger"},
+  {key: "giraffe", label: "Giraffe"},
+  {key: "dolphin", label: "Dolphin"},
+  {key: "penguin", label: "Penguin"},
+  {key: "zebra", label: "Zebra"},
+  {key: "shark", label: "Shark"},
+  {key: "whale", label: "Whale"},
+  {key: "otter", label: "Otter"},
+  {key: "crocodile", label: "Crocodile"}
+];
+
+export default function App() {
   return (
-    <div>
-      <Select
-        label="타입 선택"
-        className="max-w-xs"
-        defaultSelectedKeys={["1"]}
+    <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+      <Select 
+        label="Select an animal" 
+        className="max-w-xs" 
       >
-        <SelectItem key="1" value="1">
-          타입 1
-        </SelectItem>
-        <SelectItem key="2" value="2">
-          타입 2
-        </SelectItem>
-        <SelectItem key="3" value="3">
-          타입 3
-        </SelectItem>
+        {animals.map((animal) => (
+          <SelectItem key={animal.key}>
+            {animal.label}
+          </SelectItem>
+        ))}
       </Select>
-      
+      <Select
+        label="Favorite Animal"
+        placeholder="Select an animal"
+        className="max-w-xs"
+      >
+        {animals.map((animal) => (
+          <SelectItem key={animal.key}>
+            {animal.label}
+          </SelectItem>
+        ))}
+      </Select>
     </div>
   );
 }
-
-export default page;

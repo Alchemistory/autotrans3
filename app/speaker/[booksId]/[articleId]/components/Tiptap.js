@@ -135,7 +135,6 @@ const Tiptap = () => {
     content: `
       <p style="">
         abcd</p>
-      
     `,
   });
 
@@ -144,7 +143,7 @@ const Tiptap = () => {
       {/* <MenuBar editor={editor} /> */}
       <EditorContent
         editor={editor}
-        className="border-2 border-gray-200 rounded-lg min-h-24"
+        className="w-full bg-default-100 hover:bg-default-100 px-3 py-2 rounded-medium min-h-[80px] my-2 "
       />
     </>
   );
