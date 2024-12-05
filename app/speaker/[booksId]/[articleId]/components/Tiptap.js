@@ -6,6 +6,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Textarea } from "@nextui-org/react";
 import StarterKit from "@tiptap/starter-kit";
+import HardBreak from "@tiptap/extension-hard-break";
 import React, { useEffect } from "react";
 import {
   BsTypeH1,
@@ -123,29 +124,34 @@ const MenuBar = ({ editor }) => {
   );
 };
 
-const Tiptap = ({ value }) => {
+const Tiptap = ({ item, data, setData, value }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        hardBreak: false,
+      }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
       Highlight,
+      HardBreak.configure({
+        HTMLAttributes: {
+          class: 'hard-break',
+        },
+      }),
     ],
-    content: `
-      <p style="">
-        ${value}
-      </p>
-    `,
+    content: value,
+    onUpdate: ({ editor }) => {
+      const updatedData = data.map((d) =>
+        d.sequence === item.sequence ? { ...d, text: editor.getText() } : d
+      );
+      setData(updatedData);
+    },
   });
 
   useEffect(() => {
     if (editor) {
-      editor.commands.setContent(`
-        <p style="">
-          ${value}
-        </p>
-      `);
+      editor.commands.setContent(value);
     }
   }, [value, editor]);
 

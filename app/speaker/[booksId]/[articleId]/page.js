@@ -28,7 +28,7 @@ export default async function page({ params }) {
     .eq("id", articleId)
     .single();
   const isFixed = data1?.isFixed;
-
+  
   return (
     <div>
       <div className="flex flex-row w-full h-16 rounded-2xl mb-5 border-2 border-gray-200">

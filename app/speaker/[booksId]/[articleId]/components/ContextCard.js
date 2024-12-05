@@ -14,6 +14,7 @@ import {
   SelectItem,
   Switch,
   Spinner,
+  Chip
 } from "@nextui-org/react";
 import Tiptap from "./Tiptap";
 import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
@@ -27,6 +28,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const supabase = createClient();
   const router = useRouter();
   const [data, setData] = useState([]);
+  const [initialData, setInitialData] = useState([]);
+  const [changedData, setChangedData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
@@ -40,16 +43,116 @@ function ContextCard({ isFixed, booksId, chapterId }) {
       console.log(error);
     } else {
       setData(data);
+      setInitialData(data);
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const convertHtmlToText = (html) => {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = html;
+      return tempDiv.innerText.replace(/\n/g, "<br>");
+    };
+
+    const updatedData = data.map((item) => ({
+      ...item,
+      text: convertHtmlToText(item.text),
+    }));
+
+    setChangedData(updatedData);
+  }, [data]);
+
   useEffect(() => {
     fetchData();
   }, []);
+
   const handleSaveData = async () => {
-  
+    try {
+      // Check for deleted items
+      const deletedItems = initialData.filter(
+        (initialItem) => !data.some((item) => item.id === initialItem.id)
+      );
+
+      // Delete removed items
+      for (const item of deletedItems) {
+        const { error } = await supabase
+          .from("speakerAnalysis")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) {
+          console.error("Error deleting record:", error);
+        }
+      }
+
+      // Update or insert current items
+      for (const item of data) {
+        if (item.id) {
+          // Update existing record
+          const { error } = await supabase
+            .from("speakerAnalysis")
+            .update({
+              text: item.text,
+              textType: item.textType,
+              speaker: item.speaker,
+              sequence: item.sequence,
+              show: item.show,
+            })
+            .eq("id", item.id);
+
+          if (error) {
+            console.error("Error updating record:", error);
+          }
+        } else {
+          // Insert new record
+          const { error } = await supabase.from("speakerAnalysis").insert({
+            text: item.text,
+            textType: item.textType,
+            speaker: item.speaker,
+            chapterId: item.chapterId,
+            booksId: item.booksId,
+            sequence: item.sequence,
+            show: item.show,
+          });
+
+          if (error) {
+            console.error("Error inserting record:", error);
+          }
+        }
+      }
+      toast.success("저장 완료");
+    } catch (error) {
+      console.error("Error saving data:", error);
+      toast.error("저장 실패");
+    }
   };
-  
+
+  // Define a function to map textType to distinct Tailwind CSS class names
+  const getChipClass = (textType) => {
+    switch (textType) {
+      case "Dialogue":
+        return "bg-blue-500 text-white"; // Distinct color
+      case "Monologue":
+        return "bg-purple-500 text-white"; // Distinct color
+      case "Third-person Narration":
+        return "bg-green-500 text-white"; // Distinct color
+      case "First-person Narration":
+        return "bg-yellow-500 text-white"; // Distinct color
+      case "Sound Effect":
+        return "bg-red-500 text-white"; // Distinct color
+      case "System Window":
+        return "bg-indigo-500 text-white"; // Distinct color
+      case "Miscellaneous":
+        return "bg-pink-500 text-white"; // Distinct color
+      case "Seperator":
+        return "bg-orange-500 text-white"; // Distinct color
+      case "Line Break":
+        return "bg-teal-500 text-white"; // Distinct color
+      default:
+        return "bg-gray-200 text-white"; // Default color
+    }
+  };
 
   return (
     <div className="flex flex-col gap-y-5">
@@ -63,124 +166,141 @@ function ContextCard({ isFixed, booksId, chapterId }) {
           <Spinner />
         </div>
       ) : (
-        data.sort((a, b) => a.sequence - b.sequence).map((item, index) => (
-          <Card className="w-full " key={index}>
-            <div className="flex flex-row justify-end items-center mt-5 mr-5 ">
-              <Switch
-                size="sm"
-                isSelected={item.show}
-                aria-label="Automatic updates"
-                onChange={() => {
-                  const newData = [...data];
-                  newData[index].show = !newData[index].show;
-                  setData(newData);
-                }}
-              >
-                {item.show ? "Show" : "Hide"}
-              </Switch>
-            </div>
-            {item.show && (
-              <CardBody className="grid grid-cols-12 p-3">
-                <div className="col-span-2 flex flex-col justify-start items-start px-5">
-                  <p className="text-start">화자</p>
-                  <Input
-                    value={item.speaker}
-                    onChange={(e) => {
-                      const newData = [...data];
-                      newData[index].speaker = e.target.value;
-                      setData(newData);
-                    }}
-                    className="my-2 "
-                  ></Input>
-                </div>
-                <div className="col-span-2 flex flex-col justify-start items-start px-5">
-                  <p className="text-start">타입</p>
-                  <div></div>
-                  <Select
-                    className="my-2 w-full"
-                    defaultSelectedKeys={[item.textType]}
-                    value={item.textType}
-                    onSelectionChange={(selectedKeys) => {
-                      const newData = [...data];
-                      newData[index].textType = selectedKeys.currentKey; // Assuming selectedKeys is an object with currentKey
-                      
-                      // Set show to false if "Line Break" is selected
-                      if (selectedKeys.currentKey === "Line Break") {
-                        newData[index].show = false;
-                      }
-                      
-                      setData(newData);
-                    }}
-                  >
-                    <SelectItem key="Dialogue">Dialogue</SelectItem>
-                    <SelectItem key="Monologue">Monologue</SelectItem>
-                    <SelectItem key="Third-person Narration">
-                      Third-person Narration
-                    </SelectItem>
-                    <SelectItem key="First-person Narration">
-                      First-person Narration
-                    </SelectItem>
-                    <SelectItem key="Sound Effect">Sound Effect</SelectItem>
-                    <SelectItem key="System Window">System Window</SelectItem>
-                    <SelectItem key="Miscellaneous">Miscellaneous</SelectItem>
-                    <SelectItem key="Seperator">Seperator</SelectItem>
-                    <SelectItem key="Line Break">Line Break</SelectItem>
-                  </Select>
-                </div>
-                <div className="col-span-8 flex flex-col justify-evenly px-5 ">
-                  <p className="text-start">본문</p>
-                  <Tiptap value={item.text || ""} />
-                </div>
-              </CardBody>
-            )}
-            <CardFooter className="flex flex-row justify-end gap-x-5 p-3">
-              <button
-                onClick={() => {
-                  const newItem = {
-                    text: "",
-                    textType: "Monologue",
-                    speaker: "",
-                    chapterId: chapterId,
-                    booksId: booksId,
-                    sequence: item.sequence + 1,
-                    show: true,
-                  };
+        data
+          .sort((a, b) => a.sequence - b.sequence)
+          .map((item, index) => (
+            <Card className="w-full " key={index}>
+              <div className="flex flex-row justify-end items-center m-5 ">
+                <Switch
+                  size="sm"
+                  isSelected={item.show}
+                  aria-label="Automatic updates"
+                  onChange={() => {
+                    const newData = [...data];
+                    newData[index].show = !newData[index].show;
+                    setData(newData);
+                  }}
+                >
+                  {item.show ? "Show" : "Hide"}
+                </Switch>
+              </div>
+              {item.show && (
+                <>
+                  <CardBody className="grid grid-cols-12 p-3">
+                    <div className="col-span-2 flex flex-col justify-start items-start px-5">
+                      <p className="text-start">화자</p>
+                      <Input
+                        value={item.speaker}
+                        onChange={(e) => {
+                          const newData = [...data];
+                          newData[index].speaker = e.target.value;
+                          setData(newData);
+                        }}
+                        className="my-2 "
+                      ></Input>
+                    </div>
+                    <div className="col-span-2 flex flex-col justify-start items-start px-5">
+                      <p className="text-start">타입</p>
+                      <Select
+                        className="my-2 w-full"
+                        defaultSelectedKeys={[item.textType]}
+                        value={item.textType}
+                        onSelectionChange={(selectedKeys) => {
+                          const newData = [...data];
+                          newData[index].textType = selectedKeys.currentKey; // Assuming selectedKeys is an object with currentKey
 
-                  const newData = data.map((d, i) => {
-                    if (i >= index) {
-                      return { ...d, sequence: d.sequence + 1 };
-                    }
-                    return d;
-                  });
+                          // Set show to false if "Line Break" is selected
+                          if (selectedKeys.currentKey === "Line Break") {
+                            newData[index].show = false;
+                          }
 
-                  newData.splice(index + 1, 0, newItem);
-                  setData(newData);
-                }}
-              >
-                <FaCirclePlus className="text-4xl text-primary" />
-              </button>
-              <button
-                className="min-w-0 p-0"
-                onClick={() => {
-                  const newData = data.filter((_, i) => i !== index);
-                  // Reassign sequence values
-                  newData.forEach((item, i) => {
-                    item.sequence = i + 1;
-                  });
-                  setData(newData);
-                }}
-              >
-                <FaCircleMinus className="text-4xl text-danger-500" />
-              </button>
-            </CardFooter>
-          </Card>
-        ))
+                          setData(newData);
+                        }}
+                      >
+                        <SelectItem key="Dialogue">Dialogue</SelectItem>
+                        <SelectItem key="Monologue">Monologue</SelectItem>
+                        <SelectItem key="Third-person Narration">
+                          Third-person Narration
+                        </SelectItem>
+                        <SelectItem key="First-person Narration">
+                          First-person Narration
+                        </SelectItem>
+                        <SelectItem key="Sound Effect">Sound Effect</SelectItem>
+                        <SelectItem key="System Window">
+                          System Window
+                        </SelectItem>
+                        <SelectItem key="Miscellaneous">
+                          Miscellaneous
+                        </SelectItem>
+                        <SelectItem key="Seperator">Seperator</SelectItem>
+                        <SelectItem key="Line Break">Line Break</SelectItem>
+                      </Select>
+                      <div className="my-2 w-full flex justify-center">
+                        <Chip className={getChipClass(item.textType)}>{item.textType}</Chip>
+                      </div>
+                    </div>
+                    <div className="col-span-8 flex flex-col justify-evenly px-5 ">
+                      <p className="text-start">본문</p>
+                      <Tiptap
+                        item={item}
+                        data={data}
+                        setData={setData}
+                        value={item.text || ""}
+                      />
+                    </div>
+                    <div className="col-span-12 flex flex-row justify-end items-center gap-x-5 mt-3">
+                      <button
+                        onClick={() => {
+                          const newItem = {
+                            text: "",
+                            textType: "Monologue",
+                            speaker: "",
+                            chapterId: chapterId,
+                            booksId: booksId,
+                            sequence: item.sequence + 1,
+                            show: true,
+                          };
+
+                          const newData = data.map((d, i) => {
+                            if (i >= index) {
+                              return { ...d, sequence: d.sequence + 1 };
+                            }
+                            return d;
+                          });
+
+                          newData.splice(index + 1, 0, newItem);
+                          setData(newData);
+                        }}
+                      >
+                        <FaCirclePlus className="text-4xl text-primary" />
+                      </button>
+                      <button
+                        className="min-w-0 p-0"
+                        onClick={() => {
+                          const newData = data.filter((_, i) => i !== index);
+                          // Reassign sequence values
+                          newData.forEach((item, i) => {
+                            item.sequence = i + 1;
+                          });
+                          setData(newData);
+                        }}
+                      >
+                        <FaCircleMinus className="text-4xl text-danger-500" />
+                      </button>
+                    </div>
+                  </CardBody>
+                </>
+              )}
+            </Card>
+          ))
       )}
       <div className="flex flex-row justify-end my-5 gap-x-5">
         <Button onClick={() => router.back()} color="danger" variant="light">
           뒤로
         </Button>
-        <Button onClick={handleSaveData} color="primary">저장</Button>
+        <Button onClick={handleSaveData} color="primary">
+          저장
+        </Button>
         <Button className="text-white" color="success">
           확정
         </Button>
