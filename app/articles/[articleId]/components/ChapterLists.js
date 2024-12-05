@@ -27,9 +27,8 @@ export default function ChapterLists({ articleId }) {
   const [titleEN, setTitleEN] = useState("");
   const [contents, setContents] = useState("");
   const [chapterList, setChapterList] = useState([]);
-  const router=useRouter();
+  const router = useRouter();
 
-  
   const supabase = createClient();
 
   const getChapterList = async () => {
@@ -39,7 +38,6 @@ export default function ChapterLists({ articleId }) {
       .eq("booksId", articleId)
       .order("chapterNumber", { ascending: true });
 
-
     if (error) {
       console.log(error);
     } else {
@@ -48,15 +46,13 @@ export default function ChapterLists({ articleId }) {
   };
 
   const handleCreateChapter = async () => {
-    const { data, error } = await supabase
-      .from("chapterList")
-      .insert({
-        booksId: articleId,
-        chapterNumber: chapterNumber,
-        titleKR: titleKR,
-        titleEN: titleEN,
-        contents: contents,
-      });
+    const { data, error } = await supabase.from("chapterList").insert({
+      booksId: articleId,
+      chapterNumber: chapterNumber,
+      titleKR: titleKR,
+      titleEN: titleEN,
+      contents: contents,
+    });
     if (error) {
       toast.error("회차 생성에 실패했습니다.");
     } else {
@@ -84,33 +80,41 @@ export default function ChapterLists({ articleId }) {
         회차 새로 만들기+
       </Button>
       <div className="flex flex-col gap-5">
-      {chapterList.map((chapter, index) => (
-        <Card className="w-full h-24" key={index}>
-          <CardBody className="flex flex-row justify-between items-center px-5 md:px-20">
-            <div>
-                <p>{chapter.chapterNumber}화</p>
-              <p>{chapter.titleKR}</p>
-            </div>
-          <div className="flex flex-row gap-5 justify-center items-center">
-            
-            <div className="flex justify-center items-center">
-              <Chip color="warning">
-                {chapter.status === "ai" && "문장 유형 및 발화자 AI 분석 필요"}
-                {chapter.status === "aiUser" && "문장 유형 및 발화자 유저 검토 필요"}
-                {chapter.status === "consistency" && "일관성 및 표현 AI 분석 필요"}
-                {chapter.status === "consistencyUser" && "일관성 및 표현 유저 검토 필요"}
-                {chapter.status === "complete" && "원문 분석 완료"}
-              </Chip>
-              <Button onClick={()=>{
-                router.push(`/speaker/${articleId}/${chapter.id}`);
-              }} className="ml-5" color="primary" variant="light">
-                분석 이어하기
-              </Button>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-      ))}
+        {chapterList.map((chapter, index) => (
+          <Card className="w-full h-36 md:h-24" key={index}>
+            <CardBody className="grid grid-cols-12 justify-between items-center px-5 md:px-20">
+              <div className="col-span-12 md:col-span-6">
+                <p className="text-center md:text-left">{chapter.chapterNumber}화</p>
+                <p className="text-center md:text-left">{chapter.titleKR}</p>
+              </div>
+              <div className="col-span-12 md:col-span-6 flex flex-row gap-5 justify-center md:justify-end items-center">
+                <div className="flex flex-col md:flex-row justify-center items-center">
+                  <Chip color="warning">
+                    {chapter.status === "ai" &&
+                      "문장 유형 및 발화자 AI 분석 필요"}
+                    {chapter.status === "aiUser" &&
+                      "문장 유형 및 발화자 유저 검토 필요"}
+                    {chapter.status === "consistency" &&
+                      "일관성 및 표현 AI 분석 필요"}
+                    {chapter.status === "consistencyUser" &&
+                      "일관성 및 표현 유저 검토 필요"}
+                    {chapter.status === "complete" && "원문 분석 완료"}
+                  </Chip>
+                  <Button
+                    onClick={() => {
+                      router.push(`/speaker/${articleId}/${chapter.id}`);
+                    }}
+                    className="ml-0 md:ml-5"
+                    color="primary"
+                    variant="light"
+                  >
+                    분석 이어하기
+                  </Button>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        ))}
       </div>
       <Modal size="2xl" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
@@ -151,7 +155,9 @@ export default function ChapterLists({ articleId }) {
                 <Button color="danger" variant="light" onPress={onClose}>
                   닫기
                 </Button>
-                <Button color="primary" onPress={()=>{
+                <Button
+                  color="primary"
+                  onPress={() => {
                     onClose();
                     handleCreateChapter();
                   }}
@@ -166,4 +172,3 @@ export default function ChapterLists({ articleId }) {
     </div>
   );
 }
-

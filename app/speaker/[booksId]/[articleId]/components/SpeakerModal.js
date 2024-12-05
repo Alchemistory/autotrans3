@@ -36,7 +36,7 @@ function SpeakerModal() {
   } = useDisclosure();
   return (
     <>
-      <Button onClick={onOpen1} color="primary">
+      <Button className="col-span-12 md:col-span-3" onClick={onOpen1} color="primary">
         발화자/캐릭터 연결
       </Button>
       <Modal size="4xl" isOpen={isOpen1} onOpenChange={onOpenChange1}>

@@ -189,7 +189,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
               {item.show && (
                 <>
                   <CardBody className="grid grid-cols-12 p-3">
-                    <div className="col-span-2 flex flex-col justify-start items-start px-5">
+                    <div className="col-span-12 md:col-span-2 flex flex-col justify-start items-start px-5">
                       <p className="text-start">화자</p>
                       <Input
                         value={item.speaker}
@@ -201,7 +201,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                         className="my-2 "
                       ></Input>
                     </div>
-                    <div className="col-span-2 flex flex-col justify-start items-start px-5">
+                    <div className="col-span-12 md:col-span-2 flex flex-col justify-start items-start px-5">
                       <p className="text-start">타입</p>
                       <Select
                         className="my-2 w-full"
@@ -241,7 +241,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                         <Chip className={getChipClass(item.textType)}>{item.textType}</Chip>
                       </div>
                     </div>
-                    <div className="col-span-8 flex flex-col justify-evenly px-5 ">
+                    <div className="col-span-12 md:col-span-8 flex flex-col justify-evenly px-5 ">
                       <p className="text-start">본문</p>
                       <Tiptap
                         item={item}
@@ -298,16 +298,16 @@ function ContextCard({ isFixed, booksId, chapterId }) {
             </Card>
           ))
       )}
-      <div className="flex flex-row justify-end my-5 gap-x-5">
-        <Button onClick={() => router.back()} color="" variant="light">
+      <div className="grid grid-cols-12 gap-x-5 gap-y-5">
+        <Button className="col-span-12 md:col-span-3" onClick={() => router.back()} color="" variant="light">
           뒤로
         </Button>
-        <Button onClick={handleSaveData} color="primary">
+        <Button className="col-span-12 md:col-span-3" onClick={handleSaveData} color="primary">
           저장
         </Button>
         <SpeakerModal />
 
-        <Button color="primary" className="text-white" >
+        <Button className="col-span-12 md:col-span-3" color="primary" >
           확정
         </Button>
       </div>
