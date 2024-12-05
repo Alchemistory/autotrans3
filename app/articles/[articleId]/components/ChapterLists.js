@@ -19,7 +19,7 @@ import { supabase } from "@/utils/supabase/client";
 import { ToastContainer, toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-
+import { useRouter } from "next/navigation";
 export default function ChapterLists({ articleId }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [chapterNumber, setChapterNumber] = useState("");
@@ -27,6 +27,7 @@ export default function ChapterLists({ articleId }) {
   const [titleEN, setTitleEN] = useState("");
   const [contents, setContents] = useState("");
   const [chapterList, setChapterList] = useState([]);
+  const router=useRouter();
 
   
   const supabase = createClient();
@@ -92,8 +93,19 @@ export default function ChapterLists({ articleId }) {
             </div>
           <div className="flex flex-row gap-5 justify-center items-center">
             
-            <div className="flex">
-              <Chip color="warning">진행중</Chip>
+            <div className="flex justify-center items-center">
+              <Chip color="warning">
+                {chapter.status === "ai" && "문장 유형 및 발화자 AI 분석 필요"}
+                {chapter.status === "aiUser" && "문장 유형 및 발화자 유저 검토 필요"}
+                {chapter.status === "consistency" && "일관성 및 표현 AI 분석 필요"}
+                {chapter.status === "consistencyUser" && "일관성 및 표현 유저 검토 필요"}
+                {chapter.status === "complete" && "원문 분석 완료"}
+              </Chip>
+              <Button onClick={()=>{
+                router.push(`/speaker/${articleId}/${chapter.id}`);
+              }} className="ml-5" color="primary" variant="light">
+                분석 이어하기
+              </Button>
             </div>
           </div>
         </CardBody>

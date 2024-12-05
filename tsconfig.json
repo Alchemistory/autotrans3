@@ -33,7 +33,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "app/(auth-pages)/forgot-password/page.js", "utils/supabase/server.ㅓㄴ", "utils/supabase/client.js"  ],
+, "app/(auth-pages)/forgot-password/page.js", "utils/supabase/server.ㅓㄴ", "utils/supabase/client.js", "utils/supabase/server.ts"  ],
   "exclude": [
     "node_modules"
   ]
