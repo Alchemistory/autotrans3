@@ -53,7 +53,7 @@ function SpeakerModal() {
                     <ListboxWrapper className="w-full">
                       <Listbox aria-label="Actions">
                         <ListboxItem key="new">
-                          <div className="flex flex-row items-center justify-between">
+                          <div className="flex flex-col md:flex-row items-center justify-between">
                             <div className="flex gap-x-2 justify-center items-center">
                               <div className="">
                                 <IoPersonSharp />
@@ -64,7 +64,7 @@ function SpeakerModal() {
                           </div>
                         </ListboxItem>
                         <ListboxItem key="copy">
-                          <div className="flex flex-row items-center justify-between">
+                          <div className="flex flex-col md:flex-row items-center justify-between">
                             <div className="flex gap-x-2 justify-center items-center">
                               <div className="">
                                 <FaPlus />
@@ -75,7 +75,7 @@ function SpeakerModal() {
                           </div>
                         </ListboxItem>
                         <ListboxItem key="edit">
-                          <div className="flex flex-row items-center justify-between">
+                          <div className="flex flex-col md:flex-row items-center justify-between">
                             <div className="flex gap-x-2 justify-center items-center">
                               <div className="">
                                 <BsDot />
