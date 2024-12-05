@@ -6,7 +6,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Textarea } from "@nextui-org/react";
 import StarterKit from "@tiptap/starter-kit";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BsTypeH1,
   BsTypeH2,
@@ -123,7 +123,7 @@ const MenuBar = ({ editor }) => {
   );
 };
 
-const Tiptap = () => {
+const Tiptap = ({ value }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -134,9 +134,20 @@ const Tiptap = () => {
     ],
     content: `
       <p style="">
-        abcd</p>
+        ${value}
+      </p>
     `,
   });
+
+  useEffect(() => {
+    if (editor) {
+      editor.commands.setContent(`
+        <p style="">
+          ${value}
+        </p>
+      `);
+    }
+  }, [value, editor]);
 
   return (
     <>

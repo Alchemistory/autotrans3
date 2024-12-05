@@ -15,6 +15,8 @@ import {
 import { Select, SelectItem } from "@nextui-org/react";
 import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
 import ContextCard from "./components/ContextCard";
+
+
 export default async function page({ params }) {
   const { booksId, articleId } = params;
   const supabase = await createClient();
@@ -25,6 +27,7 @@ export default async function page({ params }) {
     .eq("booksId", booksId)
     .eq("id", articleId)
     .single();
+  const isFixed = data1?.isFixed;
 
   return (
     <div>
@@ -44,12 +47,9 @@ export default async function page({ params }) {
           <p className="text-center">{data1?.chapterNumber}</p>
         </div>
       </div>
-      <ContextCard booksId={booksId} chapterId={articleId}></ContextCard>
+      <ContextCard isFixed={isFixed} booksId={booksId} chapterId={articleId}></ContextCard>
 
-      <div className="flex flex-row justify-end my-5">
-        <Button color="primary">저장</Button>
-      </div>
-      <div></div>
+
     </div>
   );
 }
