@@ -27,10 +27,20 @@ import RadioGroupComplete from "./RadioGroupComplete";
 import MoreCharacter from "./MoreCharacter";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
+import { ToastContainer, toast } from "react-toastify";
+
+function SpeakerModal({
+  isFixed,
+  booksId,
+  chapterId,
+  data,
+  setData,
+  mappingSpeakerCharacter,
+  setMappingSpeakerCharacter,
+}) {
   const [characters, setCharacters] = useState([]);
   const [speakers, setSpeakers] = useState([]);
-  const [mappingSpeakerCharacter, setMappingSpeakerCharacter] = useState([]);
+  // const [mappingSpeakerCharacter, setMappingSpeakerCharacter] = useState([]);
   const [selectedListbox, setSelectedListbox] = useState();
   const [selectedSelect, setSelectedSelect] = useState(null);
   const {
@@ -72,6 +82,8 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
   }, [data]);
 
   const handleMappingSpeakerCharacter = () => {
+    if (mappingSpeakerCharacter.length > 0) return;
+
     const titleList = characters.flatMap((character) => {
       const titles = [character.title1];
       if (character.title2) {
@@ -113,6 +125,39 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
     handleMappingSpeakerCharacter();
   }, [characters, speakers]);
 
+  const initialMappingData = async () => {
+    const { data: mappingData, error } = await supabase
+      .from("mappingSpeakerCharacter")
+      .select("*")
+      .eq("booksId", booksId)
+      .eq("chapterId", chapterId);
+
+    if (error) {
+      console.error("매핑 데이터 조회 실패:", error);
+      return;
+    }
+
+    if (mappingData && mappingData.length > 0) {
+      const formattedMapping = mappingData.map((item) => ({
+        speaker: item.speaker,
+        character: item.title1
+          ? {
+              description: item.description,
+              title1: item.title1,
+              title2: item.title2,
+            }
+          : null,
+        status: item.status,
+      }));
+
+      setMappingSpeakerCharacter(formattedMapping);
+    }
+  };
+
+  useEffect(() => {
+    initialMappingData();
+  }, []);
+
   const handleStatusChange = (speaker, selectedKey) => {
     setMappingSpeakerCharacter((prevMapping) => {
       return prevMapping.map((item) => {
@@ -132,6 +177,49 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
       });
     });
   };
+  const handleSaveData = async () => {
+    try {
+      const insertData = mappingSpeakerCharacter.map((item) => ({
+        booksId: booksId,
+        chapterId: chapterId,
+        speaker: item.speaker,
+        title1: item.character?.title1 || "",
+        title2: item.character?.title2 || "",
+        description: item.character?.description || "",
+        status: item.status,
+      }));
+
+      // 먼저 기존 데이터 삭제
+      const { error: deleteError } = await supabase
+        .from("mappingSpeakerCharacter")
+        .delete()
+        .eq("booksId", booksId)
+        .eq("chapterId", chapterId);
+
+      if (deleteError) {
+        toast.error("데이터 삭제 실패");
+        console.log(deleteError);
+        return;
+      }
+
+      // 새로운 데이터 삽입
+      const { data, error: insertError } = await supabase
+        .from("mappingSpeakerCharacter")
+        .insert(insertData);
+
+      if (insertError) {
+        toast.error("데이터 저장 실패");
+        console.log(insertError);
+        return;
+      }
+
+      toast.success("데이터 저장 완료");
+      console.log(data);
+    } catch (err) {
+      toast.error("데이터 저장 중 오류 발생");
+      console.error(err);
+    }
+  };
 
   return (
     <>
@@ -139,9 +227,11 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
         className="col-span-12 md:col-span-3"
         onClick={onOpen1}
         color="primary"
+        isDisabled={isFixed}
       >
         발화자/캐릭터 연결
       </Button>
+
       <Modal size="4xl" isOpen={isOpen1} onOpenChange={onOpenChange1}>
         <ModalContent>
           {(onClose) => (
@@ -243,11 +333,12 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
                               </div>
                               <div className="col-span-4">
                                 <p className="text-xs text-gray-500 text-center">
-                                  {
+                                  {mappingSpeakerCharacter.find(
+                                    (item) => item.speaker === speaker
+                                  )?.status !== "new" &&
                                     mappingSpeakerCharacter.find(
                                       (item) => item.speaker === speaker
-                                    )?.character?.title1
-                                  }
+                                    )?.character?.title1}
                                 </p>
                               </div>
                             </div>
@@ -292,7 +383,13 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
                 <Button color="danger" variant="light" onPress={onClose}>
                   닫기
                 </Button>
-                <Button color="primary" onPress={onClose}>
+                <Button
+                  color="primary"
+                  onPress={() => {
+                    handleSaveData();
+                    onClose();
+                  }}
+                >
                   확인
                 </Button>
               </ModalFooter>

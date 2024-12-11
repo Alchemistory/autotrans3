@@ -108,7 +108,17 @@ export default function ChapterLists({ articleId }) {
                     color="primary"
                     variant="light"
                   >
-                    분석 이어하기
+                    문장유형 검토
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      router.push(`/consistency/${articleId}/${chapter.id}`);
+                    }}
+                    className="ml-0 md:ml-5"
+                    color="primary"
+                    variant="light"
+                  >
+                    일관성 검토
                   </Button>
                 </div>
               </div>

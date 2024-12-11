@@ -13,12 +13,15 @@ import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "next/navigation";
 import { LuPlusCircle } from "react-icons/lu";
 import { LuMinusCircle } from "react-icons/lu";
+import { usePathname } from "next/navigation"; // 상단에 추가
 
 export default function SidebarComplete({ userServer, children }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { user, setUser } = useUserStore(); // Use Zustand store
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname(); // pathname 가져오기
+  console.log(pathname);
 
   useEffect(() => {
     const handleAuthChange = async (event, session) => {
@@ -129,9 +132,13 @@ export default function SidebarComplete({ userServer, children }) {
           <h2 className="text-medium font-medium text-default-700">Overview</h2>
         </header>
         <main className="row-span-9 mt-4 min-h-0">
-          <div className="w-full h-full rounded-medium border-small border-divider p-6 overflow-auto bg-white">
-            {children}
-          </div>
+          {pathname.startsWith("/consistency") ? (
+            children
+          ) : (
+            <div className="w-full h-full rounded-medium border-small border-divider p-6 overflow-auto bg-white">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -26,7 +26,6 @@ import { ToastContainer, toast } from "react-toastify";
 import { usePathname } from "next/navigation";
 import SpeakerModal from "./SpeakerModal";
 import { FaPlus, FaMinus } from "react-icons/fa";
-
 function ContextCard({ isFixed, booksId, chapterId }) {
   const supabase = createClient();
   const router = useRouter();
@@ -34,6 +33,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const [initialData, setInitialData] = useState([]);
   const [changedData, setChangedData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mappingSpeakerCharacter, setMappingSpeakerCharacter] = useState([]);
 
   const fetchData = async () => {
     const { data, error } = await supabase
@@ -131,6 +131,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
     }
   };
 
+
+
   // Define a function to map textType to distinct Tailwind CSS class names
   const getChipClass = (textType) => {
     switch (textType) {
@@ -158,17 +160,49 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   };
 
   const handleConfirm = async () => {
-    const { error } = await supabase
+    const { error:error1 } = await supabase
       .from("chapterList")
       .update({ isFixed: true })
       .eq("booksId", booksId)
-      .eq("chapterNumber", chapterId);
-    if (error) {
+      .eq("id", chapterId);
+    
+    const { error:error2 } = await supabase
+    .from("mappingSpeakerCharacter")
+    .update({ isFixed: true })
+    .eq("booksId", booksId)
+    .eq("chapterId", chapterId);
+    
+    if (error2) {
       toast.error("확정 실패");
     } else {
       toast.success("확정 완료");
+      router.refresh();
     }
+
+     
+
   };
+  
+  const cancelConfirm=async()=>{
+    const { error:error1 } = await supabase
+    .from("chapterList")
+    .update({ isFixed: false })
+    .eq("booksId", booksId)
+    .eq("id", chapterId);
+
+    const { error:error2 } = await supabase
+    .from("mappingSpeakerCharacter")
+    .update({ isFixed: false })
+    .eq("booksId", booksId)
+    .eq("chapterId", chapterId);
+
+    if (error1 || error2) {
+      toast.error("취소 실패");
+    } else {
+      toast.success("취소 완료");
+      router.refresh();
+    }
+  }
 
   return (
     <div className="flex flex-col gap-y-5">
@@ -359,19 +393,31 @@ function ContextCard({ isFixed, booksId, chapterId }) {
           className="col-span-12 md:col-span-3"
           onClick={handleSaveData}
           color="primary"
+          isDisabled={isFixed}
         >
           저장
         </Button>
-        <SpeakerModal isFixed={isFixed} booksId={booksId} chapterId={chapterId} data={data} setData={setData} />
-
-        <Button
-          onClick={handleConfirm}
+        <SpeakerModal mappingSpeakerCharacter={mappingSpeakerCharacter} setMappingSpeakerCharacter={setMappingSpeakerCharacter} isFixed={isFixed} booksId={booksId} chapterId={chapterId} data={data} setData={setData} />
+        {isFixed && (
+          <Button
+            onClick={cancelConfirm}
+            className="col-span-12 md:col-span-3"
+            color="danger"
+          >
+            취소
+          </Button>
+        )}
+        {!isFixed && (
+          <Button
+            onClick={handleConfirm}
           className="col-span-12 md:col-span-3"
           color="primary"
+          isDisabled={isFixed}
         >
           확정
         </Button>
-      </div>
+        )}
+        </div>
     </div>
   );
 }

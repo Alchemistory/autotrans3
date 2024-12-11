@@ -27,6 +27,7 @@ export default async function page({ params }) {
     .eq("booksId", booksId)
     .eq("id", articleId)
     .single();
+  console.log('data1:',data1)
   const isFixed = data1?.isFixed;
   
   return (
