@@ -219,7 +219,7 @@ function CharacterList({ articleId }) {
                   />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold">캐릭터의 다른 이름</h1>
+                  <h1 className="text-lg font-bold">캐릭터의 다른 이름<span className="text-xs text-gray-500">(여러 개 기입시 '|'로 구분하여 입력해주세요)</span></h1>
                   <Input
                     type="text"
                     label=""

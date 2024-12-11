@@ -188,7 +188,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
             <Card className="w-full h-full" key={index}>
               <>
                 <CardBody
-                  className={`grid grid-cols-12 p-2 justify-center items-start ${
+                  className={`grid grid-cols-12 p-2 justify-center items-start h-30 ${
                     item.show ? "" : "justify-end flex items-end"
                   }`}
                 >
@@ -267,7 +267,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                         /> */}
                         <Textarea
                           size="sm"
-                          className="h-fit"
+                          className="max-h-14 flex items-center justify-center"
+
                           value={item.text}
                           onChange={(e) => {
                             const newData = [...data];
@@ -361,7 +362,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
         >
           저장
         </Button>
-        <SpeakerModal />
+        <SpeakerModal isFixed={isFixed} booksId={booksId} chapterId={chapterId} data={data} setData={setData} />
 
         <Button
           onClick={handleConfirm}
