@@ -15,7 +15,6 @@ import {
   Switch,
   Spinner,
   Chip,
-  Textarea,
 } from "@nextui-org/react";
 import Tiptap from "./Tiptap";
 import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
@@ -185,10 +184,10 @@ function ContextCard({ isFixed, booksId, chapterId }) {
         data
           .sort((a, b) => a.sequence - b.sequence)
           .map((item, index) => (
-            <Card className="w-full h-full" key={index}>
+            <Card className="w-full " key={index}>
               <>
                 <CardBody
-                  className={`grid grid-cols-12 p-2 justify-center items-start ${
+                  className={`grid grid-cols-12 p-2 ${
                     item.show ? "" : "justify-end flex items-end"
                   }`}
                 >
@@ -197,7 +196,6 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                       <div className="col-span-12 md:col-span-2 flex flex-col justify-start items-start px-5">
                         <p className="text-start">화자</p>
                         <Input
-                          size="sm"
                           value={item.speaker}
                           onChange={(e) => {
                             const newData = [...data];
@@ -207,78 +205,62 @@ function ContextCard({ isFixed, booksId, chapterId }) {
                           className="my-2 "
                         ></Input>
                       </div>
-                      <div className="col-span-12 md:col-span-3 flex flex-col justify-start items-start px-5">
+                      <div className="col-span-12 md:col-span-2 flex flex-col justify-start items-start px-5">
                         <p className="text-start">타입</p>
-                        <div className="flex w-full justify-center items-center space-x-3">
-                          <Select
-                            size="sm"
-                            className="my-2 w-full"
-                            defaultSelectedKeys={[item.textType]}
-                            value={item.textType}
-                            onSelectionChange={(selectedKeys) => {
-                              const newData = [...data];
-                              newData[index].textType = selectedKeys.currentKey; // Assuming selectedKeys is an object with currentKey
+                        <Select
+                          className="my-2 w-full"
+                          defaultSelectedKeys={[item.textType]}
+                          value={item.textType}
+                          onSelectionChange={(selectedKeys) => {
+                            const newData = [...data];
+                            newData[index].textType = selectedKeys.currentKey; // Assuming selectedKeys is an object with currentKey
 
-                              // Set show to false if "Line Break" is selected
-                              if (selectedKeys.currentKey === "Line Break") {
-                                newData[index].show = false;
-                              }
+                            // Set show to false if "Line Break" is selected
+                            if (selectedKeys.currentKey === "Line Break") {
+                              newData[index].show = false;
+                            }
 
-                              setData(newData);
-                            }}
-                          >
-                            <SelectItem key="Dialogue">Dialogue</SelectItem>
-                            <SelectItem key="Monologue">Monologue</SelectItem>
-                            <SelectItem key="Third-person Narration">
-                              Third-person Narration
-                            </SelectItem>
-                            <SelectItem key="First-person Narration">
-                              First-person Narration
-                            </SelectItem>
-                            <SelectItem key="Sound Effect">
-                              Sound Effect
-                            </SelectItem>
-                            <SelectItem key="System Window">
-                              System Window
-                            </SelectItem>
-                            <SelectItem key="Miscellaneous">
-                              Miscellaneous
-                            </SelectItem>
-                            <SelectItem key="Seperator">Seperator</SelectItem>
-                            <SelectItem key="Line Break">Line Break</SelectItem>
-                          </Select>
-                          <div className=" w-full flex justify-center">
-                            <Chip
-                              size="sm"
-                              className={getChipClass(item.textType)}
-                            >
-                              {item.textType}
-                            </Chip>
-                          </div>
+                            setData(newData);
+                          }}
+                        >
+                          <SelectItem key="Dialogue">Dialogue</SelectItem>
+                          <SelectItem key="Monologue">Monologue</SelectItem>
+                          <SelectItem key="Third-person Narration">
+                            Third-person Narration
+                          </SelectItem>
+                          <SelectItem key="First-person Narration">
+                            First-person Narration
+                          </SelectItem>
+                          <SelectItem key="Sound Effect">
+                            Sound Effect
+                          </SelectItem>
+                          <SelectItem key="System Window">
+                            System Window
+                          </SelectItem>
+                          <SelectItem key="Miscellaneous">
+                            Miscellaneous
+                          </SelectItem>
+                          <SelectItem key="Seperator">Seperator</SelectItem>
+                          <SelectItem key="Line Break">Line Break</SelectItem>
+                        </Select>
+                        <div className="my-2 w-full flex justify-center">
+                          <Chip size='sm' className={getChipClass(item.textType)}>
+                            {item.textType}
+                          </Chip>
                         </div>
                       </div>
-                      <div className="col-span-12 md:col-span-6 flex flex-col justify-evenly px-5 ">
+                      <div className="col-span-12 md:col-span-7 flex flex-col justify-evenly px-5 ">
                         <p className="text-start">본문</p>
-                        {/* <Tiptap
+                        <Tiptap
                           item={item}
                           data={data}
                           setData={setData}
                           value={item.text || ""}
-                        /> */}
-                        <Textarea
-                          size="sm"
-                          className="h-fit"
-                          value={item.text}
-                          onChange={(e) => {
-                            const newData = [...data];
-                            newData[index].text = e.target.value;
-                            setData(newData);
-                          }}
-                        ></Textarea>
+                        />
                       </div>
                     </>
                   )}
-                  <div className="col-span-1 flex flex-col justify-center items-center space-y-5 h-full ">
+                  <div className="col-span-1 flex flex-col justify-center items-center space-y-5">
                     <div className="flex flex-col justify-end items-center ">
                       <Switch
                         size="sm"

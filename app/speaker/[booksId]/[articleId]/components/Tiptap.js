@@ -160,7 +160,7 @@ const Tiptap = ({ item, data, setData, value }) => {
       {/* <MenuBar editor={editor} /> */}
       <EditorContent
         editor={editor}
-        className="w-full bg-default-100 hover:bg-default-100 px-3 py-2 rounded-medium min-h-[80px] my-2 "
+        className="w-full bg-default-100 hover:bg-default-100 px-3 py-2 rounded-medium min-h-[60px] my-2 "
       />
     </>
   );
