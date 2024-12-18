@@ -6,9 +6,9 @@ import {Skeleton} from "@nextui-org/react";
 import Highlight from '@tiptap/extension-highlight'
 import {Button} from "@nextui-org/react";
 
-function Tiptap() {
+function Tiptap({chunk}) {
   const [isLoading, setIsLoading] = React.useState(true)
-  
+  console.log('chunk:', chunk)
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -16,7 +16,7 @@ function Tiptap() {
         multicolor: false,
       }),
     ],
-    content: '<p>Hello World! 🌎️</p>',
+    content: chunk.chunkId.chunkText || '<p>Hello World! 🌎️</p>',
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -41,32 +41,7 @@ function Tiptap() {
   })
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 relative">
-      {!isLoading && editor && (
-        <div className="fixed transform translate-x-1/3 -translate-y-full bg-white shadow-lg rounded-lg p-2 gap-2 flex"> 
-          <Button
-            size='sm'
-            className="text-sm px-2 py-1 rounded hover:bg-gray-100"
-            onClick={() => editor.chain().focus().unsetHighlight().run()}
-          >
-            삭제
-          </Button>
-          <Button
-            size='sm'
-            className="text-sm px-2 py-1 rounded hover:bg-gray-100"
-            onClick={() => {
-              const selection = editor.state.selection
-              const text = editor.state.doc.textBetween(selection.from, selection.to)
-              const newText = prompt('텍스트 수정:', text)
-              if (newText) {
-                editor.chain().focus().insertContent(newText).run()
-              }
-            }}
-          >
-            수정
-          </Button>
-        </div>
-      )}
+    <div className="border border-gray-200 rounded-lg p-4 relative flex-grow">
       
       {isLoading ? (
         <div className="space-y-3">

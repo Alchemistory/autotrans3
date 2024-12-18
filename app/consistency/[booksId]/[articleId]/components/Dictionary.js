@@ -16,13 +16,18 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import ChangeModal from "./ChangeModal";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { useDictionary } from "@/store/useDictionary";
 function Dictionary({ booksId, articleId }) {
   const [categories, setCategories] = useState([]);
-  const [dictionary, setDictionary] = useState([]);
+  const {dictionary, setDictionary} = useDictionary()
   const [selectedLargeCategory, setSelectedLargeCategory] = useState("");
   const [selectedMediumCategory, setSelectedMediumCategory] = useState("");
   const [selectedSmallCategory, setSelectedSmallCategory] = useState("");
+  const [filteredDictionary, setFilteredDictionary] = useState([]);
+  const [selectedDictionary, setSelectedDictionary] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [myId, setMyId] = useState(null);
   const supabase = createClient();
 
   const getCategories = async () => {
@@ -38,7 +43,9 @@ function Dictionary({ booksId, articleId }) {
     const { data, error } = await supabase
       .from("dictionaryList")
       .select("*")
-      .eq("booksId", booksId);
+      .eq("booksId", booksId)
+      .order("id", { ascending: false });
+
     if (error) {
       console.log(error);
     } else {
@@ -49,11 +56,55 @@ function Dictionary({ booksId, articleId }) {
     getCategories();
     getDictionary();
   }, []);
-  console.log("dictionary:", dictionary);
-  console.log("categories:", categories);
 
+  useEffect(() => {
+    if (
+      !selectedLargeCategory &&
+      !selectedMediumCategory &&
+      !selectedSmallCategory
+    ) {
+      setFilteredDictionary(dictionary);
+    } else {
+      setFilteredDictionary(
+        dictionary.filter(
+          (item) =>
+            (selectedLargeCategory
+              ? item.categoryLarge === selectedLargeCategory
+              : true) &&
+            (selectedMediumCategory
+              ? item.categoryMiddle === selectedMediumCategory
+              : true) &&
+            (selectedSmallCategory
+              ? item.categorySmall === selectedSmallCategory
+              : true)
+        )
+      );
+    }
+  }, [selectedLargeCategory, selectedMediumCategory, selectedSmallCategory,dictionary]);
+  
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from("dictionaryList")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      console.log(error);
+    } else {
+      getDictionary();
+      toast.success("삭제되었습니다.");
+    }
+  };
+
+  console.log('selectedDictionary:', selectedDictionary)
+  console.log("dictionary:",dictionary)
   return (
     <div className="w-full h-full flex flex-col gap-y-3">
+      <ToastContainer
+        autoClose={1000}
+        hideProgressBar={false}
+        position="top-center"
+      />
       {isLoading ? (
         <div className="flex justify-center items-center h-32">
           <Spinner />
@@ -69,12 +120,17 @@ function Dictionary({ booksId, articleId }) {
               <Select
                 size="sm"
                 className="flex-grow"
-                onChange={(e) => setSelectedLargeCategory(e.target.value)}
+                value={selectedLargeCategory}
+                onSelectionChange={(keys) => {
+                  const key = Array.from(keys)[0];
+                  setSelectedLargeCategory(key);
+                }}
               >
+
                 {categories
                   .filter((category) => category.variant === "large")
                   .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.name} value={category.name}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -86,12 +142,13 @@ function Dictionary({ booksId, articleId }) {
               </div>
               <Select
                 size="sm"
+                value={selectedMediumCategory}
                 onChange={(e) => setSelectedMediumCategory(e.target.value)}
               >
                 {categories
                   .filter((category) => category.variant === "medium")
                   .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.name} value={category.name}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -103,12 +160,13 @@ function Dictionary({ booksId, articleId }) {
               </div>
               <Select
                 size="sm"
+                value={selectedSmallCategory}
                 onChange={(e) => setSelectedSmallCategory(e.target.value)}
               >
                 {categories
                   .filter((category) => category.variant === "small")
                   .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.name} value={category.name}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -122,22 +180,33 @@ function Dictionary({ booksId, articleId }) {
               item: "border-small border-divider text-sm",
               trigger: "text-xs",
             }}
+            onSelectionChange={(input) => {
+              const keys = Array.from(input).map(key => Number(key));
+              console.log('keys:', keys)
+              const selectedDict = dictionary.filter((item) => keys.includes(Number(item.id)));
+              console.log('selectedDict:', selectedDict)
+              setSelectedDictionary(selectedDict);
+            }}
+            
           >
-            {dictionary.map((item, index) => (
+            {filteredDictionary?.map((item, index) => (
               <ListboxItem
                 className="border-2 border-sky-200 text-sm"
-                key={index}
+                key={item.id}
               >
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-x-1">
                       {item.isNew === true ? (
-                        <GoDotFill className="text-red-500" />
+                        <GoDotFill
+                          className={`${item.isFixed ? "text-green-500" : "text-red-500"}`}
+                        />
                       ) : (
                         <></>
                       )}
                       <span className="text-[10px] text-default-400">
-                      {item.categoryLarge} /{item.categoryMiddle} / {item.categorySmall}
+                        {item.categoryLarge} /{item.categoryMiddle} /{" "}
+                        {item.categorySmall}
                       </span>
                     </div>
                     <div>
@@ -145,8 +214,22 @@ function Dictionary({ booksId, articleId }) {
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <ChangeModal item={item} booksId={booksId} articleId={articleId} categories={categories} />
-                    <Button isIconOnly aria-label="Like" color="">
+                    <ChangeModal
+                      myId={myId}
+                      setMyId={setMyId}
+                      dictionary={dictionary}
+                      getDictionary={getDictionary}
+                      item={item}
+                      booksId={booksId}
+                      articleId={articleId}
+                      categories={categories}
+                    />
+                    <Button
+                      isIconOnly
+                      aria-label="Like"
+                      color=""
+                      onClick={() => handleDelete(item.id)}
+                    >
                       <FaRegTrashCan className="text-gray-500" />
                     </Button>
                   </div>

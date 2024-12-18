@@ -12,7 +12,10 @@ import {
   SelectItem,
   Listbox,
   ListboxItem,
+  Input
 } from "@nextui-org/react";
+import { useState, useEffect } from "react";
+import { IoSearch } from "react-icons/io5";
 
 export const ListboxWrapper = ({ children }) => (
   <div className="w-full border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100">
@@ -20,13 +23,26 @@ export const ListboxWrapper = ({ children }) => (
   </div>
 );
 
-function SentenceModal() {
+function SentenceModal({myId, setMyId, dictionary, changedWordId, setChangedWordId}) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedKeys, setSelectedKeys] = React.useState(new Set(["text"]));
+  const [filteredDictionary, setFilteredDictionary] = useState(dictionary);
+  const [search, setSearch] = useState("");
   const selectedValue = React.useMemo(
     () => Array.from(selectedKeys).join(", "),
     [selectedKeys]
   );
+
+  const filterDictionary = () => {
+    setFilteredDictionary(
+      dictionary.filter(
+        (item) => item.categoryLarge === "문장" && item.titleKR.includes(search) && item.id !== myId
+      )
+    );
+  };
+  useEffect(() => {
+    filterDictionary();
+  }, [search])
 
   return (
     <>
@@ -40,12 +56,8 @@ function SentenceModal() {
               <ModalHeader>문장 검색</ModalHeader>
               <ModalBody>
                 <div className="flex flex-row gap-x-5 justify-between items-center">
-                  <h1 className="flex-shrink-0">회차</h1>
-                  <Select>
-                    <SelectItem>Rain</SelectItem>
-                    <SelectItem>Rain</SelectItem>
-                    <SelectItem>Rain</SelectItem>
-                  </Select>
+                  
+                  <Input startContent={<IoSearch />} type="text" placeholder="문장을 검색해주세요" value={search} onChange={(e) => setSearch(e.target.value)}/>
                 </div>
                 <ListboxWrapper>
                   <Listbox
@@ -56,11 +68,13 @@ function SentenceModal() {
                     variant="flat"
                     onSelectionChange={setSelectedKeys}
                   >
-                    <ListboxItem key="text">Text</ListboxItem>
-                    <ListboxItem key="number">Number</ListboxItem>
-                    <ListboxItem key="date">Date</ListboxItem>
-                    <ListboxItem key="single_date">Single Date</ListboxItem>
-                    <ListboxItem key="iteration">Iteration</ListboxItem>
+                    {filteredDictionary.map((item, index) => (
+                      <ListboxItem key={index} onClick={() => setChangedWordId(item.id)}>
+                        <div className="text-xs text-gray-500">{item.categoryLarge}/{item.categoryMiddle}/{item.categorySmall}</div>
+                        <div>{item.titleKR}</div>
+                      </ListboxItem>
+                    ))}
+                    
                   </Listbox>
                 </ListboxWrapper>
               </ModalBody>

@@ -128,6 +128,7 @@ export default function DictionaryList({ articleId }) {
       categoryLarge: selectedLargeCategory,
       categoryMiddle: selectedMiddleCategory,
       categorySmall: selectedSmallCategory,
+      booksId: articleId,
     });
     if (error) {
       toast.error(error.message);

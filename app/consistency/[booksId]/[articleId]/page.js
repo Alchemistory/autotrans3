@@ -16,7 +16,7 @@ function page({ params }) {
       
       <div className="col-span-6 rounded-medium border-small border-divider p-6 bg-white overflow-y-auto scrollbar-hide">
         <h1>청크</h1>
-        <Chunk />
+        <Chunk booksId={booksId} articleId={articleId}/>
       </div>
       
       <div className="col-span-3 rounded-medium border-small border-divider p-6 bg-white overflow-y-auto scrollbar-hide">

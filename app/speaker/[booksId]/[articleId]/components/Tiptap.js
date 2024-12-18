@@ -25,6 +25,7 @@ import {
 
 const MenuBar = ({ editor }) => {
   if (!editor) {
+    console.error("Editor is not initialized");
     return null;
   }
 
@@ -32,9 +33,11 @@ const MenuBar = ({ editor }) => {
     <div className="control-group">
       <div className="button-group">
         <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
+          onClick={() => {
+            if (editor) {
+              editor.chain().focus().toggleHeading({ level: 1 }).run();
+            }
+          }}
           className={
             editor.isActive("heading", { level: 1 }) ? "is-active" : ""
           }
@@ -142,10 +145,12 @@ const Tiptap = ({ item, data, setData, value }) => {
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      const updatedData = data.map((d) =>
-        d.sequence === item.sequence ? { ...d, text: editor.getText() } : d
-      );
-      setData(updatedData);
+      if (editor) {
+        const updatedData = data.map((d) =>
+          d.sequence === item.sequence ? { ...d, text: editor.getText() } : d
+        );
+        setData(updatedData);
+      }
     },
   });
 
