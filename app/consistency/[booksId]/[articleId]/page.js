@@ -11,7 +11,7 @@ function page({ params }) {
     <div className="w-full h-full grid grid-cols-12 gap-x-3">
       <div className="col-span-3 rounded-medium border-small border-divider p-6 bg-white overflow-y-auto scrollbar-hide">
       <h1>일관성 사전</h1>
-        <Dictionary />
+        <Dictionary booksId={booksId} articleId={articleId}/>
       </div>
       
       <div className="col-span-6 rounded-medium border-small border-divider p-6 bg-white overflow-y-auto scrollbar-hide">
