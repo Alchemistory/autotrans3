@@ -5,11 +5,14 @@ import { CheckboxGroup, Checkbox } from "@nextui-org/react";
 import { createClient } from "@/utils/supabase/client";
 import { useSelectedChunk } from "@/store/useSelectedChunk";
 import { useChunk } from "@/store/useChunk";
+import { useDictionary } from "@/store/useDictionary";
+import Textareas from "./Textareas";
 function Chunk({ booksId, articleId }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
   const {chunks, setChunks} = useChunk()
   const [chunkData, setChunkData] = useState([]);
+  const {dictionary,setDictionary} = useDictionary()
   // const { selectedChunk, setSelectedChunk } = useChunkStore();
   
   const {selectedChunk, setSelectedChunk,setSelectedChunks,clearSelectedChunk} = useSelectedChunk()
@@ -84,7 +87,8 @@ function Chunk({ booksId, articleId }) {
               isSelected={selectedChunk.includes(chunk.chunkId.id)}
               onChange={() => handleChunkSelect(chunk.chunkId.id)}
             />
-            <Tiptap key={index} chunk={chunk} />
+            <Tiptap booksId={booksId} articleId={articleId} key={index} chunk={chunk} dictionary={dictionary} setDictionary={setDictionary} />
+            {/* <Textareas chunk={chunk} dictionary={dictionary} /> */}
           </div>
         ))}
       </div>
