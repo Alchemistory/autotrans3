@@ -147,6 +147,7 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
   const renderBubbleMenu = () => (
     <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
       <Button
+        color="primary"
         auto
         flat
         onClick={() => {

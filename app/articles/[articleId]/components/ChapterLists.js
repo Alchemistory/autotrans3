@@ -120,6 +120,16 @@ export default function ChapterLists({ articleId }) {
                   >
                     일관성 검토
                   </Button>
+                  <Button
+                    onClick={() => {
+                      router.push(`/expression/${articleId}/${chapter.id}`);
+                    }}
+                    className="ml-0 md:ml-5"
+                    color="primary"
+                    variant="light"
+                  >
+                    표현 검토
+                  </Button>
                 </div>
               </div>
             </CardBody>
