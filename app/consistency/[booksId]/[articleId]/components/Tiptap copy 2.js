@@ -92,78 +92,59 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
   const editor = useEditor({
     extensions: [StarterKit, Highlight.configure({ multicolor: true })],
     content: chunk?.chunkId?.chunkText || "",
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm focus:outline-none',
-      },
+    onCreate: ({ editor }) => {
+      if (highlightedWords) {
+        highlightText(editor);
+      }
     },
-    parseOptions: {
-      preserveWhitespace: true,
+    onUpdate: ({ editor }) => {
+      // Removed the previous logic for setting selectedWord
     },
   });
 
-  useEffect(() => {
-    if (editor && highlightedWords && highlightedContents?.length) {
-      const currentSelection = editor.state.selection;
-      
-      // 초기 상태로 리셋
-      editor.chain()
-        .focus()
-        .selectAll()
-        .unsetHighlight()
-        .run();
+  const highlightText = (editor) => {
+    const content = editor.getJSON();
+    const transactions = [];
 
-      const content = editor.getHTML();
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
-      const plainText = tempDiv.textContent;
-
-      // 일반 하이라이트 단어들의 매치를 찾아서 배열로 저장
-      const matches = [];
-      highlightedContents.forEach((word) => {
-        const regex = new RegExp(word, 'g');
-        let match;
-        while ((match = regex.exec(plainText)) !== null) {
-          matches.push({
-            word,
-            index: match.index,
-            length: match[0].length,
-            type: 'normal'
-          });
-        }
-      });
-
-      // selectedDictionary 단어의 매치를 찾아서 배열에 추가
-      if (selectedDictionary?.titleKR) {
-        const regex = new RegExp(selectedDictionary.titleKR, 'g');
-        let match;
-        while ((match = regex.exec(plainText)) !== null) {
-          matches.push({
-            word: selectedDictionary.titleKR,
-            index: match.index,
-            length: match[0].length,
-            type: 'selected'
-          });
-        }
+    const traverseAndHighlight = (node, startPos = 0) => {
+      if (node.type === "text" && Array.isArray(highlightedContents)) {
+        highlightedContents.forEach((item) => {
+          const regex = new RegExp(item, "g");
+          let match;
+          while ((match = regex.exec(node.text)) !== null) {
+            transactions.push({
+              from: startPos + match.index + 1,
+              to: startPos + match.index + match[0].length + 1,
+              attrs: { color: "yellow" },
+            });
+          }
+        });
       }
 
-      // 매치된 모든 부분을 하이라이트 (타입에 따라 다른 색상 적용)
-      matches.forEach(({index, length, type}) => {
-        editor.chain()
-          .setTextSelection({
-            from: index + 1,
-            to: index + 1 + length
-          })
-          .setHighlight({ 
-            color: type === 'selected' ? '#90CDF4' : 'yellow' // selected는 하늘색, 일반은 노란색
-          })
-          .run();
-      });
+      if (node.content) {
+        let currentPos = startPos;
+        node.content.forEach((childNode) => {
+          traverseAndHighlight(childNode, currentPos);
+          currentPos += childNode.text?.length || 0;
+        });
+      }
+    };
 
-      // 원래 커서 위치로 복원
-      editor.commands.setTextSelection(currentSelection);
-    }
-  }, [editor, highlightedWords, highlightedContents, selectedDictionary]);
+    content.content?.forEach(traverseAndHighlight);
+
+    transactions.forEach(({ from, to, attrs }) => {
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .setMark("highlight", attrs)
+        .setTextSelection({ from: to })
+        .run();
+    });
+
+    // Deselect all text after highlighting
+    editor.chain().focus().setTextSelection({ from: 0, to: 0 }).run();
+  };
 
   const renderBubbleMenu = () => (
     <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>

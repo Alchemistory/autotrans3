@@ -1,24 +1,45 @@
 "use client";
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
+import React, { useState, useEffect } from "react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import React from "react";
-import { Skeleton } from "@nextui-org/react";
 import Highlight from "@tiptap/extension-highlight";
-import { Button } from "@nextui-org/react";
-import { useState, useEffect } from "react";
+import { Input, Button } from "@nextui-org/react";
+import { useSelectedDictionary } from "@/store/useSelectedDictionary";
 import { createClient } from "@/utils/supabase/client";
 import { ToastContainer, toast } from "react-toastify";
-import {useRouter} from 'next/navigation'
 
-function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
-  const [isLoading, setIsLoading] = React.useState(true);
+const Tiptap = ({ booksId, articleId, chunk, dictionary, setDictionary,fetchChunk }) => {
+  const [selectedText, setSelectedText] = useState("");
+  const { selectedDictionary, setSelectedDictionary } = useSelectedDictionary();
   const [highlightedContents, setHighlightedContents] = useState([]);
-  const [highlightedWords, setHighlightedWords] = useState(false);
-  const [selectedWord, setSelectedWord] = useState("");
-  const [savedSelections, setSavedSelections] = useState([]);
-  const supabase = createClient();
-  const router = useRouter();
+  const [highlightedWordList, setHighlightedWordList] = useState([]);
+  const [selectedDictionaryWordList, setSelectedDictionaryWordList] = useState(
+    []
+  );
+  const [isHaveSelectedDictionary, setIsHaveSelectedDictionary] =
+    useState(false);
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
 
+  const editor = useEditor({
+    extensions: [StarterKit, Highlight],
+    content: chunk?.chunkId?.chunkText || "",
+  });
+
+  const handleSave = async () => {
+    console.log("editor", editor.getText());
+    const { data, error } = await supabase
+      .from("chunks")
+      .update({ chunkText: editor.getText() })
+      .eq("id", chunk.chunkId.id);
+    if (error) {
+      toast.error("저장 실패");
+    } else {
+      toast.success("수정 완료");
+      fetchChunk();
+    }
+  };
+
+  const supabase = createClient();
   const getDictionary = async () => {
     const { data, error } = await supabase
       .from("dictionaryList")
@@ -32,153 +53,104 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
       setDictionary(data);
     }
   };
-
-  console.log("selectedWord:", selectedWord);
-  const handleAddWord = async () => {
-    const { data, error } = await supabase.from("dictionaryList").insert({
-      titleKR: selectedWord,
-      titleEN: "",
-      categoryLarge: "용어",
-      categoryMiddle: "",
-      categorySmall: "",
-      booksId: booksId,
-      isNew: true,
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("단어 추가 완료");
-      getDictionary();
-    }
-  };
-
-  const handleSaveSelection = () => {
-    if (selectedWord) {
-      setSavedSelections((prevSelections) => [...prevSelections, selectedWord]);
-      console.log("Saved Selections:", savedSelections);
-    }
-  };
-
   useEffect(() => {
-    if (chunk && chunk.chunkId && chunk.chunkId.chunkText) {
-      setIsLoading(false);
-    }
-
-    if (chunk && chunk.dictionaryList) {
-      const newHighlightedContents = dictionary
-        ?.filter((dictItem) => chunk.dictionaryList.includes(dictItem.id))
-        .map((dictItem) => dictItem.titleKR);
-
-      setHighlightedContents(newHighlightedContents);
-      setHighlightedWords(true);
-    }
-  }, [chunk, dictionary]);
-
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      setSelectedWord(selection.toString());
-    };
-
-    document.addEventListener('selectionchange', handleSelectionChange);
-
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
+    getDictionary();
   }, []);
 
-  const editor = useEditor({
-    extensions: [StarterKit, Highlight.configure({ multicolor: true })],
-    content: chunk?.chunkId?.chunkText || "",
-    onCreate: ({ editor }) => {
-      if (highlightedWords) {
-        highlightText(editor);
-      }
-    },
-    onUpdate: ({ editor }) => {
-      // Removed the previous logic for setting selectedWord
-    },
-  });
+  useEffect(() => {
+    if (dictionary && chunk?.chunkId?.chunkText) {
+      const highlightedWords = dictionary.filter((dict) => {
+        return chunk.dictionaryList.includes(dict.id);
+      });
 
-  const highlightText = (editor) => {
-    const content = editor.getJSON();
-    const transactions = [];
+      setHighlightedWordList(highlightedWords);
+    }
+  }, [dictionary, chunk, selectedDictionary]);
 
-    const traverseAndHighlight = (node, startPos = 0) => {
-      if (node.type === "text" && Array.isArray(highlightedContents)) {
-        highlightedContents.forEach((item) => {
-          const regex = new RegExp(item, "g");
-          let match;
-          while ((match = regex.exec(node.text)) !== null) {
-            transactions.push({
-              from: startPos + match.index + 1,
-              to: startPos + match.index + match[0].length + 1,
-              attrs: { color: "yellow" },
-            });
-          }
-        });
-      }
+  useEffect(() => {
+    if (chunk?.chunkId?.chunkText && selectedDictionary.length > 0) {
+      const hasSelectedDictionaryWord = selectedDictionary.some((word) =>
+        chunk.chunkId.chunkText.includes(word.titleKR)
+      );
+      setIsHaveSelectedDictionary(hasSelectedDictionaryWord);
+    } else {
+      setIsHaveSelectedDictionary(false);
+    }
+  }, [chunk, selectedDictionary]);
 
-      if (node.content) {
-        let currentPos = startPos;
-        node.content.forEach((childNode) => {
-          traverseAndHighlight(childNode, currentPos);
-          currentPos += childNode.text?.length || 0;
-        });
-      }
-    };
+  const highlightText = (text, words, selectedWords) => {
+    console.log("words", words);
+    console.log("selectedWords", selectedWords);
+    if (!text) return text;
 
-    content.content?.forEach(traverseAndHighlight);
+    let highlightedText = text;
 
-    transactions.forEach(({ from, to, attrs }) => {
-      editor
-        .chain()
-        .focus()
-        .setTextSelection({ from, to })
-        .setMark("highlight", attrs)
-        .setTextSelection({ from: to })
-        .run();
-    });
+    if (words.length) {
+      const wordsRegex = new RegExp(`(${words.join("|")})`, "gi");
+      highlightedText = highlightedText.replace(
+        wordsRegex,
+        (match) => `<span style="background-color: yellow;">${match}</span>`
+      );
+    }
 
-    // Deselect all text after highlighting
-    editor.chain().focus().setTextSelection({ from: 0, to: 0 }).run();
+    if (selectedWords.length) {
+      const selectedWordsRegex = new RegExp(
+        `(${selectedWords.join("|")})`,
+        "gi"
+      );
+      highlightedText = highlightedText.replace(
+        selectedWordsRegex,
+        (match) => `<span style="color: red;">${match}</span>`
+      );
+    }
+
+    return highlightedText;
   };
-
-  const renderBubbleMenu = () => (
-    <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-      <Button
-        color="primary"
-        auto
-        flat
-        onClick={() => {
-          handleAddWord();
-          console.log("Selected Text:", selectedWord);
-          editor.chain().focus().blur().run();
-        }}
-      >
-        추가
-      </Button>
-    </BubbleMenu>
+  console.log("selectedDictionary11:", selectedDictionary);
+  const highlightedChunkText = highlightText(
+    chunk?.chunkId?.chunkText,
+    highlightedWordList.map((word1) => word1.titleKR),
+    selectedDictionary.map((word2) => word2.titleKR)
   );
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 relative flex-grow">
-      {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-2 w-full rounded-lg" />
-          <Skeleton className="h-2 w-3/4 rounded-lg" />
+    <div className="w-full h-full flex flex-col gap-y-2">
+      <div className="flex w-full h-full justify-between items-center gap-x-2">
+        <div
+          className={`chunks border ${isHaveSelectedDictionary ? "border-red-500 border-2" : "border-gray-300"} w-full h-full rounded-lg p-2`}
+          dangerouslySetInnerHTML={{ __html: highlightedChunkText }}
+        />
+        <Button
+          className="text-gray-400"
+          size="md"
+          color=""
+          variant="bordered"
+          onClick={() => setIsEditorVisible(!isEditorVisible)}
+        >
+          수정
+        </Button>
+      </div>
+      {isEditorVisible && (
+        <div className="flex flex-row gap-x-2">
+          <div className="w-full h-full border border-primary border-2 rounded-lg p-2">
+            <EditorContent editor={editor} />
+          </div>
+          <Button
+            className="text-primary"
+            size="md"
+            color="primary"
+            variant="bordered"
+            onClick={() => {
+              handleSave();
+              setIsEditorVisible(!isEditorVisible);
+            }}
+          >
+            저장
+          </Button>
         </div>
-      ) : (
-        <>
-          {editor && renderBubbleMenu()}
-          <EditorContent
-            editor={editor}
-            className="[&_mark]:hover:cursor-pointer"
-          />
-        </>
       )}
     </div>
   );
-}
+};
 
 export default Tiptap;

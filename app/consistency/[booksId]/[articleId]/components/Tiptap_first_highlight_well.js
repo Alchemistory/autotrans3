@@ -17,9 +17,9 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
   const [highlightedWords, setHighlightedWords] = useState(false);
   const [selectedWord, setSelectedWord] = useState("");
   const [savedSelections, setSavedSelections] = useState([]);
+  const {selectedDictionary, setSelectedDictionary} = useSelectedDictionary();
   const supabase = createClient();
   const router = useRouter();
-  const { selectedDictionary, setSelectedDictionary } = useSelectedDictionary();
 
   const getDictionary = async () => {
     const { data, error } = await supabase
@@ -104,7 +104,7 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
 
   useEffect(() => {
     if (editor && highlightedWords && highlightedContents?.length) {
-      const currentSelection = editor.state.selection;
+      const currentSelection = editor.state.selection;  // 현재 커서 위치 저장
       
       // 초기 상태로 리셋
       editor.chain()
@@ -118,7 +118,7 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
       tempDiv.innerHTML = content;
       const plainText = tempDiv.textContent;
 
-      // 일반 하이라이트 단어들의 매치를 찾아서 배열로 저장
+      // 모든 매치를 찾아서 배열로 저장
       const matches = [];
       highlightedContents.forEach((word) => {
         const regex = new RegExp(word, 'g');
@@ -127,43 +127,26 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
           matches.push({
             word,
             index: match.index,
-            length: match[0].length,
-            type: 'normal'
+            length: match[0].length
           });
         }
       });
 
-      // selectedDictionary 단어의 매치를 찾아서 배열에 추가
-      if (selectedDictionary?.titleKR) {
-        const regex = new RegExp(selectedDictionary.titleKR, 'g');
-        let match;
-        while ((match = regex.exec(plainText)) !== null) {
-          matches.push({
-            word: selectedDictionary.titleKR,
-            index: match.index,
-            length: match[0].length,
-            type: 'selected'
-          });
-        }
-      }
-
-      // 매치된 모든 부분을 하이라이트 (타입에 따라 다른 색상 적용)
-      matches.forEach(({index, length, type}) => {
+      // 매치된 모든 부분을 하이라이트
+      matches.forEach(({index, length}) => {
         editor.chain()
           .setTextSelection({
             from: index + 1,
             to: index + 1 + length
           })
-          .setHighlight({ 
-            color: type === 'selected' ? '#90CDF4' : 'yellow' // selected는 하늘색, 일반은 노란색
-          })
+          .setHighlight({ color: 'yellow' })
           .run();
       });
 
       // 원래 커서 위치로 복원
       editor.commands.setTextSelection(currentSelection);
     }
-  }, [editor, highlightedWords, highlightedContents, selectedDictionary]);
+  }, [editor, highlightedWords, highlightedContents]);
 
   const renderBubbleMenu = () => (
     <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>

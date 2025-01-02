@@ -18,6 +18,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useDictionary } from "@/store/useDictionary";
+import { useSelectedDictionary } from '@/store/useSelectedDictionary';
 function Dictionary({ booksId, articleId }) {
   const [categories, setCategories] = useState([]);
   const {dictionary, setDictionary} = useDictionary()
@@ -25,7 +26,7 @@ function Dictionary({ booksId, articleId }) {
   const [selectedMediumCategory, setSelectedMediumCategory] = useState("");
   const [selectedSmallCategory, setSelectedSmallCategory] = useState("");
   const [filteredDictionary, setFilteredDictionary] = useState([]);
-  const [selectedDictionary, setSelectedDictionary] = useState([]);
+  const {selectedDictionary, setSelectedDictionary} = useSelectedDictionary();
   const [isLoading, setIsLoading] = useState(true);
   const [myId, setMyId] = useState(null);
   const supabase = createClient();

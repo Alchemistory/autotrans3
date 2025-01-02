@@ -1,21 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
 import Tiptap from "./Tiptap";
-import { CheckboxGroup, Checkbox } from "@nextui-org/react";
+import { CheckboxGroup, Checkbox, Divider } from "@nextui-org/react";
 import { createClient } from "@/utils/supabase/client";
 import { useSelectedChunk } from "@/store/useSelectedChunk";
-import { useChunk } from "@/store/useChunk";
 import { useDictionary } from "@/store/useDictionary";
+import { useChunk } from "@/store/useChunk";
 import Textareas from "./Textareas";
 function Chunk({ booksId, articleId }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
-  const {chunks, setChunks} = useChunk()
-  const [chunkData, setChunkData] = useState([]);
-  const {dictionary,setDictionary} = useDictionary()
-  // const { selectedChunk, setSelectedChunk } = useChunkStore();
-  
-  const {selectedChunk, setSelectedChunk,setSelectedChunks,clearSelectedChunk} = useSelectedChunk()
+  const { chunks, setChunks } = useChunk();
+  const { dictionary, setDictionary } = useDictionary();
+
+  const {
+    selectedChunk,
+    setSelectedChunk,
+    setSelectedChunks,
+    clearSelectedChunk,
+  } = useSelectedChunk();
 
   const fetchChunk = async () => {
     const { data: data1, error: error1 } = await supabase
@@ -46,7 +49,7 @@ function Chunk({ booksId, articleId }) {
   const handleChunkSelectAll = (isChecked) => {
     if (isChecked) {
       // Select all chunks
-      setSelectedChunks(chunks.map(chunk => chunk.chunkId.id));
+      setSelectedChunks(chunks.map((chunk) => chunk.chunkId.id));
     } else {
       // Deselect all chunks
       clearSelectedChunk();
@@ -56,7 +59,7 @@ function Chunk({ booksId, articleId }) {
   const handleChunkSelectSelected = () => {
     setSelectedChunk(selectedChunk);
   };
-  console.log('selectedChunk', selectedChunk)
+  console.log("selectedChunk", selectedChunk);
 
   return (
     <div className="my-3">
@@ -81,14 +84,24 @@ function Chunk({ booksId, articleId }) {
         <Tiptap />
         <Tiptap /> */}
         {chunks.map((chunk, index) => (
-          <div key={index} className="flex gap-x-3 w-full">
-            <Checkbox
-              value={chunk.id}
-              isSelected={selectedChunk.includes(chunk.chunkId.id)}
-              onChange={() => handleChunkSelect(chunk.chunkId.id)}
-            />
-            <Tiptap booksId={booksId} articleId={articleId} key={index} chunk={chunk} dictionary={dictionary} setDictionary={setDictionary} />
-            {/* <Textareas chunk={chunk} dictionary={dictionary} /> */}
+          <div key={index} className="flex gap-x-3 w-full flex-col gap-y-3">
+            <div className="flex  gap-y-3 w-full">
+              <Checkbox
+                value={chunk.id}
+                isSelected={selectedChunk.includes(chunk.chunkId.id)}
+                onChange={() => handleChunkSelect(chunk.chunkId.id)}
+              />
+              <Tiptap
+                booksId={booksId}
+                articleId={articleId}
+                key={index}
+                chunk={chunk}
+                dictionary={dictionary}
+                setDictionary={setDictionary}
+                fetchChunk={fetchChunk}
+              />
+              {/* <Textareas chunk={chunk} dictionary={dictionary} /> */}
+            </div>
           </div>
         ))}
       </div>
