@@ -13,8 +13,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@nextui-org/react";
 import { ToastContainer, toast } from "react-toastify";
 import { useApplyFlag } from "@/store/useApplyFlag";
-function ItemList({booksId, articleId}) {
-  const { selectedChunk, setSelectedChunk } = useSelectedChunk();
+function ItemList({ booksId, articleId }) {
+  const { selectedChunk, setSelectedChunk, clearSelectedChunk } = useSelectedChunk();
   const { chunks, setChunks, fetchChunk } = useChunk();
   const { dictionary, setDictionary } = useDictionary();
   const { selectedDictionary, setSelectedDictionary } = useSelectedDictionary();
@@ -43,8 +43,8 @@ function ItemList({booksId, articleId}) {
     );
 
     // Sort itemList by titleKR in ascending order
-    const sortedItemList = itemList?.sort((a, b) => 
-      a.titleKR.localeCompare(b.titleKR, 'ko')
+    const sortedItemList = itemList?.sort((a, b) =>
+      a.titleKR.localeCompare(b.titleKR, "ko")
     );
 
     setItemList(itemList);
@@ -52,15 +52,17 @@ function ItemList({booksId, articleId}) {
 
   useEffect(() => {
     filterDictionaryOld();
-  }, [selectedChunk,chunks]);
+  }, [selectedChunk, chunks]);
 
   const handleCancelItem = async (item) => {
     // Filter out the selected chunks that contain the item.id in their dictionaryList
-    const updatedChunks = chunks.map(chunk => {
+    const updatedChunks = chunks.map((chunk) => {
       if (selectedChunk.includes(chunk.chunkId.id)) {
         return {
           ...chunk,
-          dictionaryList: chunk.dictionaryList.filter(dictItem => dictItem !== item.id)
+          dictionaryList: chunk.dictionaryList.filter(
+            (dictItem) => dictItem !== item.id
+          ),
         };
       }
       return chunk;
@@ -68,46 +70,54 @@ function ItemList({booksId, articleId}) {
 
     // Update the chunks state with the filtered chunks
     setChunks(updatedChunks);
-    console.log('updatedChunks:',updatedChunks)
+    console.log("updatedChunks:", updatedChunks);
     // Update the itemList to reflect the changes
-    const updatedItemList = itemList.filter(listItem => listItem.id !== item.id);
+    const updatedItemList = itemList.filter(
+      (listItem) => listItem.id !== item.id
+    );
     setItemList(updatedItemList);
 
     // Update the chunks in Supabase
     try {
-      const { error } = await supabase
-        .from('consistencyAnalysis')
-        .upsert(
-          updatedChunks.map(chunk => ({
-            id: chunk.chunkId.id, // Ensure this matches your primary key
-            dictionaryList: chunk.dictionaryList
-          })),
-          { onConflict: 'id' }
-        );
+      const { error } = await supabase.from("consistencyAnalysis").upsert(
+        updatedChunks.map((chunk) => ({
+          id: chunk.chunkId.id, // Ensure this matches your primary key
+          dictionaryList: chunk.dictionaryList,
+        })),
+        { onConflict: "id" }
+      );
 
       if (error) {
         toast.error(`삭제 실패: ${error.message}`);
-        console.log('error:', error);
+        console.log("error:", error);
       } else {
-        toast.success('적용 해제');
-        fetchChunk(supabase,booksId, articleId);
+        toast.success("적용 해제");
+        fetchChunk(supabase, booksId, articleId);
       }
     } catch (error) {
-      console.log('error:', error);
+      console.log("error:", error);
     }
   };
-  
+
   const handleApply = async () => {
-    const updatedChunks = chunks.map(chunk => {
+    const updatedChunks = chunks.map((chunk) => {
       if (selectedChunk.includes(chunk.chunkId.id)) {
-        const matchingItems = selectedDictionary.filter(dictItem =>
+        const matchingItems = selectedDictionary.filter((dictItem) =>
           chunk.chunkId.chunkText.includes(dictItem.titleKR)
         );
 
         if (matchingItems.length > 0) {
+          // Merge existing dictionaryList with new matching items
+          const newDictionaryList = [
+            ...new Set([
+              ...chunk.dictionaryList,
+              ...matchingItems.map((item) => item.id),
+            ]),
+          ];
+
           return {
             ...chunk,
-            dictionaryList: matchingItems.map(item => item.id)
+            dictionaryList: newDictionaryList,
           };
         }
       }
@@ -115,33 +125,28 @@ function ItemList({booksId, articleId}) {
     });
 
     try {
-      const { error } = await supabase
-        .from('consistencyAnalysis')
-        .upsert(
-          updatedChunks.map(chunk => ({
-            id: chunk.chunkId.id,
-            dictionaryList: chunk.dictionaryList
-          })),
-          { onConflict: 'id' }
-        );
+      const { error } = await supabase.from("consistencyAnalysis").upsert(
+        updatedChunks.map((chunk) => ({
+          id: chunk.chunkId.id,
+          dictionaryList: chunk.dictionaryList,
+        })),
+        { onConflict: "id" }
+      );
 
       if (error) {
         toast.error(`적용하기 실패: ${error.message}`);
-        console.log('error:', error);
+        console.log("error:", error);
         fetchChunk(supabase, booksId, articleId);
       } else {
-        toast.success('적용하기 완료');
-        console.log('Updated chunks:', updatedChunks);
+        toast.success("적용하기 완료");
+        console.log("Updated chunks:", updatedChunks);
         fetchChunk(supabase, booksId, articleId);
       }
       toggleApplyFlag();
-
     } catch (error) {
-      console.log('error:', error);
+      console.log("error:", error);
     }
   };
-
-  
 
   return (
     <div className="w-full h-[calc(100vh-200px)] flex flex-col">
@@ -153,7 +158,12 @@ function ItemList({booksId, articleId}) {
               key={index}
             >
               <div className="w-auto h-full absolute top-1 right-1">
-                <MdOutlineCancel className="text-yellow-500 cursor-pointer hover:text-red-500 transition-transform" onClick={() => (handleCancelItem(item))} />
+                <MdOutlineCancel
+                  className="text-yellow-500 cursor-pointer hover:text-red-500 transition-transform"
+                  onClick={() => {
+                    handleCancelItem(item);
+                  }}
+                />
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
@@ -180,10 +190,14 @@ function ItemList({booksId, articleId}) {
         </div>
       </div>
       <div className="h-16 flex items-center ">
-        <Button onClick={()=>{
-          handleApply();
-          toggleApplyFlag();
-        }} color="primary" className="w-full">
+        <Button
+          onClick={() => {
+            handleApply();
+            toggleApplyFlag();
+          }}
+          color="primary"
+          className="w-full"
+        >
           적용하기
         </Button>
       </div>

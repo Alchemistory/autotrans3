@@ -3,11 +3,14 @@ import React from "react";
 import { Select, SelectItem,Chip } from "@nextui-org/react";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
+import { useSelectedFilter } from "@/store/useSelectedFilter"
+import { useExpressionVariation } from "@/store/useExpressionVariation"
 function FilterList() {
   const [values, setValues] = React.useState(new Set(['전체']));
   const supabase = createClient();
-  const [expressionVariation, setExpressionVariation] = useState([])
-
+  const { expressionVariation, setExpressionVariation } = useExpressionVariation();
+  const { selectedFilter, setSelectedFilter } = useSelectedFilter();
+  
   const getExpressionVariation = async () => {
     const { data, error } = await supabase
       .from("expressionVariation")
@@ -19,6 +22,16 @@ function FilterList() {
   useEffect(() => {
     getExpressionVariation();
   }, []);
+
+  const handleFilter = () => {
+    setSelectedFilter(Array.from(values));
+  };
+
+  useEffect(() => {
+    handleFilter();
+  }, [values]);
+
+  console.log('selectedFilter:',selectedFilter)
   return (
     <div className="flex w-full flex-row gap-x-5 items-center">
       <Select
