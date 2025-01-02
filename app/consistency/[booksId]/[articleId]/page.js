@@ -21,7 +21,7 @@ function page({ params }) {
       
       <div className="col-span-3 rounded-medium border-small border-divider p-6 bg-white overflow-y-auto scrollbar-hide">
         <h1>청크 내 항목 리스트</h1>
-        <ItemList />
+        <ItemList booksId={booksId} articleId={articleId}/>
       </div>
     </div>
   );

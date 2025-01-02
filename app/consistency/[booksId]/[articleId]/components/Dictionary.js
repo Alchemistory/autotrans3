@@ -97,8 +97,6 @@ function Dictionary({ booksId, articleId }) {
     }
   };
 
-  console.log('selectedDictionary:', selectedDictionary)
-  console.log("dictionary:",dictionary)
   return (
     <div className="w-full h-full flex flex-col gap-y-3">
       <ToastContainer
@@ -183,9 +181,7 @@ function Dictionary({ booksId, articleId }) {
             }}
             onSelectionChange={(input) => {
               const keys = Array.from(input).map(key => Number(key));
-              console.log('keys:', keys)
               const selectedDict = dictionary.filter((item) => keys.includes(Number(item.id)));
-              console.log('selectedDict:', selectedDict)
               setSelectedDictionary(selectedDict);
             }}
             

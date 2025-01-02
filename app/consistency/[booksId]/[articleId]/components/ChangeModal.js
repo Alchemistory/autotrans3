@@ -75,10 +75,6 @@ function ChangeModal({ dictionary, item, booksId, articleId, categories, getDict
       setChangedSentence(dictionary.find((item) => item.id === changedSentenceId));
     }
   }, [changedWordId, changedSentenceId]);
-
-  console.log("changedWord:", changedWord);
-  console.log("changedSentence:", changedSentence);
-  console.log("myId:", myId);
   
   return (
     <>

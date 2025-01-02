@@ -35,7 +35,6 @@ function Tiptap({ booksId, articleId, chunk, dictionary, setDictionary }) {
     }
   };
 
-  console.log("selectedWord:", selectedWord);
   const handleAddWord = async () => {
     const { data, error } = await supabase.from("dictionaryList").insert({
       titleKR: selectedWord,

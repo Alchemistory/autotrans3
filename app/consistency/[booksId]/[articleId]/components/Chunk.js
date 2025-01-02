@@ -6,41 +6,29 @@ import { createClient } from "@/utils/supabase/client";
 import { useSelectedChunk } from "@/store/useSelectedChunk";
 import { useDictionary } from "@/store/useDictionary";
 import { useChunk } from "@/store/useChunk";
+import { useApplyFlag } from "@/store/useApplyFlag";
+import { useIsHaveChunkList } from "@/store/useIsHaveChunkList";
 import Textareas from "./Textareas";
 function Chunk({ booksId, articleId }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
-  const { chunks, setChunks } = useChunk();
+  const { chunks, setChunks, fetchChunk } = useChunk();
   const { dictionary, setDictionary } = useDictionary();
-
+  const { applyFlag, toggleApplyFlag } = useApplyFlag();
+  const { isHaveChunkList, addToIsHaveChunkList, removeFromIsHaveChunkList } = useIsHaveChunkList()
   const {
     selectedChunk,
     setSelectedChunk,
     setSelectedChunks,
     clearSelectedChunk,
   } = useSelectedChunk();
+  const [isPartialSelected, setIsPartialSelected] = useState(false);
 
-  const fetchChunk = async () => {
-    const { data: data1, error: error1 } = await supabase
-      .from("consistencyAnalysis")
-      .select(
-        `
-        *,
-        chunkId(*)
-      `
-      )
-      .eq("booksId", booksId)
-      .eq("chapterId", articleId)
-      .order("id", { ascending: true });
-    if (error1) {
-      console.log("error:", error1);
-    } else {
-      setChunks(data1);
-    }
-  };
+  
+
   useEffect(() => {
-    fetchChunk();
-  }, []);
+    fetchChunk(supabase,booksId, articleId);
+  }, [applyFlag]);
 
   const handleChunkSelect = (chunkId) => {
     setSelectedChunk(chunkId);
@@ -59,8 +47,21 @@ function Chunk({ booksId, articleId }) {
   const handleChunkSelectSelected = () => {
     setSelectedChunk(selectedChunk);
   };
-  console.log("selectedChunk", selectedChunk);
+  const handleChunkSelectPartial = () => {
+    if (isPartialSelected) {
+      // Deselect all chunks
+      clearSelectedChunk();
+      setIsPartialSelected(false);
+    } else if (isHaveChunkList.size > 0) {
+      // Select all chunks
+      const selectedChunkIds = Array.from(isHaveChunkList);
+      console.log('selectedChunkIds:', selectedChunkIds);
+      setSelectedChunks(selectedChunkIds);
+      setIsPartialSelected(true);
+    }
+  };
 
+  console.log('isPartialSelected:',isPartialSelected)
   return (
     <div className="my-3">
       <CheckboxGroup
@@ -75,7 +76,14 @@ function Chunk({ booksId, articleId }) {
         >
           전체선택
         </Checkbox>
-        <Checkbox onChange={handleChunkSelectSelected} value="select">
+        <Checkbox
+          isSelected={isPartialSelected}
+          onChange={() => {
+            handleChunkSelectPartial();
+            setIsPartialSelected(!isPartialSelected);
+          }}
+          value="select"
+        >
           표시된 부분 모두 선택
         </Checkbox>
       </CheckboxGroup>
@@ -98,7 +106,6 @@ function Chunk({ booksId, articleId }) {
                 chunk={chunk}
                 dictionary={dictionary}
                 setDictionary={setDictionary}
-                fetchChunk={fetchChunk}
               />
               {/* <Textareas chunk={chunk} dictionary={dictionary} /> */}
             </div>

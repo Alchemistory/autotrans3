@@ -11,15 +11,17 @@ import { useSelectedDictionary } from "@/store/useSelectedDictionary";
 import { useChunk } from "@/store/useChunk";
 import { useEffect, useState } from "react";
 import { Button } from "@nextui-org/react";
-function ItemList() {
+import { ToastContainer, toast } from "react-toastify";
+import { useApplyFlag } from "@/store/useApplyFlag";
+function ItemList({booksId, articleId}) {
   const { selectedChunk, setSelectedChunk } = useSelectedChunk();
-  const { chunks, setChunks } = useChunk();
+  const { chunks, setChunks, fetchChunk } = useChunk();
   const { dictionary, setDictionary } = useDictionary();
   const { selectedDictionary, setSelectedDictionary } = useSelectedDictionary();
   const [selectedItem, setSelectedItem] = useState([]);
   const [itemList, setItemList] = useState([]);
   const supabase = createClient();
-
+  const { applyFlag, toggleApplyFlag } = useApplyFlag();
 
   const filterDictionaryOld = async () => {
     // Get chunks that match selectedChunk ids
@@ -50,9 +52,9 @@ function ItemList() {
 
   useEffect(() => {
     filterDictionaryOld();
-  }, [selectedChunk]);
+  }, [selectedChunk,chunks]);
 
-  const handleCancelItem = (item) => {
+  const handleCancelItem = async (item) => {
     // Filter out the selected chunks that contain the item.id in their dictionaryList
     const updatedChunks = chunks.map(chunk => {
       if (selectedChunk.includes(chunk.chunkId.id)) {
@@ -66,10 +68,77 @@ function ItemList() {
 
     // Update the chunks state with the filtered chunks
     setChunks(updatedChunks);
-
+    console.log('updatedChunks:',updatedChunks)
     // Update the itemList to reflect the changes
     const updatedItemList = itemList.filter(listItem => listItem.id !== item.id);
     setItemList(updatedItemList);
+
+    // Update the chunks in Supabase
+    try {
+      const { error } = await supabase
+        .from('consistencyAnalysis')
+        .upsert(
+          updatedChunks.map(chunk => ({
+            id: chunk.chunkId.id, // Ensure this matches your primary key
+            dictionaryList: chunk.dictionaryList
+          })),
+          { onConflict: 'id' }
+        );
+
+      if (error) {
+        toast.error(`삭제 실패: ${error.message}`);
+        console.log('error:', error);
+      } else {
+        toast.success('적용 해제');
+        fetchChunk(supabase,booksId, articleId);
+      }
+    } catch (error) {
+      console.log('error:', error);
+    }
+  };
+  
+  const handleApply = async () => {
+    const updatedChunks = chunks.map(chunk => {
+      if (selectedChunk.includes(chunk.chunkId.id)) {
+        const matchingItems = selectedDictionary.filter(dictItem =>
+          chunk.chunkId.chunkText.includes(dictItem.titleKR)
+        );
+
+        if (matchingItems.length > 0) {
+          return {
+            ...chunk,
+            dictionaryList: matchingItems.map(item => item.id)
+          };
+        }
+      }
+      return chunk;
+    });
+
+    try {
+      const { error } = await supabase
+        .from('consistencyAnalysis')
+        .upsert(
+          updatedChunks.map(chunk => ({
+            id: chunk.chunkId.id,
+            dictionaryList: chunk.dictionaryList
+          })),
+          { onConflict: 'id' }
+        );
+
+      if (error) {
+        toast.error(`적용하기 실패: ${error.message}`);
+        console.log('error:', error);
+        fetchChunk(supabase, booksId, articleId);
+      } else {
+        toast.success('적용하기 완료');
+        console.log('Updated chunks:', updatedChunks);
+        fetchChunk(supabase, booksId, articleId);
+      }
+      toggleApplyFlag();
+
+    } catch (error) {
+      console.log('error:', error);
+    }
   };
 
   
@@ -111,7 +180,10 @@ function ItemList() {
         </div>
       </div>
       <div className="h-16 flex items-center ">
-        <Button color="primary" className="w-full">
+        <Button onClick={()=>{
+          handleApply();
+          toggleApplyFlag();
+        }} color="primary" className="w-full">
           적용하기
         </Button>
       </div>
