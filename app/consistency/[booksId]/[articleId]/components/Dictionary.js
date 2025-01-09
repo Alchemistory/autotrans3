@@ -196,7 +196,7 @@ function Dictionary({ booksId, articleId }) {
                     <div className="flex items-center gap-x-1">
                       {item.isNew === true ? (
                         <GoDotFill
-                          className={`${item.isFixed ? "text-green-500" : "text-red-500"}`}
+                          className={`${item.isFixedSpeaker ? "text-green-500" : "text-red-500"}`}
                         />
                       ) : (
                         <></>

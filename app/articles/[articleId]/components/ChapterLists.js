@@ -68,6 +68,7 @@ export default function ChapterLists({ articleId }) {
   useEffect(() => {
     getChapterList();
   }, []);
+  console.log('chapterList', chapterList)
 
   return (
     <div className="w-full h-full">
@@ -107,6 +108,7 @@ export default function ChapterLists({ articleId }) {
                     className="ml-0 md:ml-5"
                     color="primary"
                     variant="light"
+                    
                   >
                     문장유형 검토
                   </Button>
@@ -114,9 +116,11 @@ export default function ChapterLists({ articleId }) {
                     onClick={() => {
                       router.push(`/consistency/${articleId}/${chapter.id}`);
                     }}
+
                     className="ml-0 md:ml-5"
                     color="primary"
                     variant="light"
+                    isDisabled={!chapter.isFixedSpeaker}
                   >
                     일관성 검토
                   </Button>
@@ -127,6 +131,7 @@ export default function ChapterLists({ articleId }) {
                     className="ml-0 md:ml-5"
                     color="primary"
                     variant="light"
+                    isDisabled={!chapter.isFixedSpeaker}
                   >
                     표현 검토
                   </Button>

@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { LuPlusCircle } from "react-icons/lu";
 import { LuMinusCircle } from "react-icons/lu";
 import { usePathname } from "next/navigation"; // 상단에 추가
-
+import ProgrssSection from "./ProgrssSection";
 export default function SidebarComplete({ userServer, children }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { user, setUser } = useUserStore(); // Use Zustand store
@@ -129,7 +129,8 @@ export default function SidebarComplete({ userServer, children }) {
               width={24}
             />
           </Button>
-          <h2 className="text-medium font-medium text-default-700">Overview</h2>
+          {/* <h2 className="text-medium font-medium text-default-700">Overview</h2> */}
+          <ProgrssSection />
         </header>
         <main className="row-span-9 mt-4 min-h-0">
           {pathname.startsWith("/consistency") ? (

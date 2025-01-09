@@ -159,7 +159,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const handleConfirm = async () => {
     const { error } = await supabase
       .from("chapterList")
-      .update({ isFixed: true })
+      .update({ isFixedSpeaker: true })
       .eq("booksId", booksId)
       .eq("chapterNumber", chapterId);
     if (error) {

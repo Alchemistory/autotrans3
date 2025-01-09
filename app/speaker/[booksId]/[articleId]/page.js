@@ -15,24 +15,22 @@ import {
 import { Select, SelectItem } from "@nextui-org/react";
 import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
 import ContextCard from "./components/ContextCard";
-
+import { useBookName } from "@/store/useBookName";
 
 export default async function page({ params }) {
   const { booksId, articleId } = params;
   const supabase = await createClient();
-
-  const { data: data1, error: error1 } = await supabase
+  const { data: bookInfo, error: error1 } = await supabase
     .from("chapterList")
-    .select("*")
+    .select("*,booksId(*)")
     .eq("booksId", booksId)
     .eq("id", articleId)
     .single();
-  console.log('data1:',data1)
-  const isFixed = data1?.isFixed;
+  const isFixed = bookInfo?.isFixedSpeaker;
   
   return (
     <div>
-      <div className="flex flex-row w-full h-16 rounded-2xl mb-5 border-2 border-gray-200">
+      {/* <div className="flex flex-row w-full h-16 rounded-2xl mb-5 border-2 border-gray-200">
         <div className="w-1/2 h-full relative  flex flex-col justify-center">
           <p className="text-center">챕터명(국문)</p>
           <p className="text-center">{data1?.titleKR}</p>
@@ -47,8 +45,8 @@ export default async function page({ params }) {
           <p className="text-center">챕터번호</p>
           <p className="text-center">{data1?.chapterNumber}</p>
         </div>
-      </div>
-      <ContextCard isFixed={isFixed} booksId={booksId} chapterId={articleId}></ContextCard>
+      </div> */}
+      <ContextCard bookInfo={bookInfo} isFixed={isFixed} booksId={booksId} chapterId={articleId}></ContextCard>
       
 
     </div>

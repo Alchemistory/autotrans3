@@ -13,9 +13,6 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { ToastContainer, toast } from "react-toastify";
 import { useStageExpression } from "@/store/useStageExpression";
-import { useSelectedExpressionId } from "@/store/useSelectedExpressionId";
-import { useExpressionRefresh } from "@/store/useExpressionRefresh";
-
 function SimpleTiptap({
   booksId,
   articleId,
@@ -29,8 +26,6 @@ function SimpleTiptap({
   activePopover,
   setActivePopover,
 }) {
-  const { selectedExpressionId, setSelectedExpressionId } =
-    useSelectedExpressionId();
   const editor = useEditor({
     extensions: [StarterKit, Highlight],
     content: expression?.chunkId?.chunkText || "",
@@ -42,138 +37,46 @@ function SimpleTiptap({
   const [selectedText, setSelectedText] = useState("");
   const [selectionType, setSelectionType] = useState(null);
   const { stageExpression, setStageExpression } = useStageExpression();
-  const [myWords, setMyWords] = useState([]);
-  const { expressionRefresh, toggleExpressionRefresh } = useExpressionRefresh();
+
   const supabase = createClient();
 
   const handleAddWord = async () => {
-    setStageExpression(selectedText);
-  };
-
-  const handleEditWord = async () => {
-    setStageExpression(selectedText);
-  };
-
-  const handleDeleteWord = async () => {
-    console.log('selectedText:', selectedText);
-    const { data: expressionData, error: expressionError } = await supabase
-      .from("expressionList")
-      .select("*")
-      .eq("title", selectedText)
-      .single();
-    console.log('expressionData:', expressionData);
-    if (expressionError) {
-      toast.error("삭제 실패1: 항목을 찾을 수 없습니다.");
-      return;
-    }
-
-    const expressionId = expressionData.id;
-
-    // Fetch all entries from expressionAnalysis where booksId and chapterId match
-    const { data: analysisData, error: analysisError } = await supabase
-      .from("expressionAnalysis")
-      .select("*")
-      .eq("booksId", booksId)
-      .eq("chapterId", articleId);
-
-    if (analysisError) {
-      toast.error("삭제 실패2: 분석 항목을 찾을 수 없습니다.");
-      return;
-    }
-
-    // Iterate over each entry and update the expressionList
-    for (const analysisEntry of analysisData) {
-      const updatedExpressionList = analysisEntry.expressionList.filter(
-        (id) => id !== expressionId
-      );
-
-      const { error: updateError } = await supabase
-        .from("expressionAnalysis")
-        .update({ expressionList: updatedExpressionList })
-        .eq("id", analysisEntry.id);
-
-      if (updateError) {
-        toast.error("삭제 실패: 업데이트 중 오류 발생");
-        return;
-      }
-    }
-
-    // Delete the word from expressionList
-    const { error: deleteError } = await supabase
-      .from("expressionList")
-      .delete()
-      .eq("id", expressionId);
-
-    if (deleteError) {
-      toast.error("삭제 실패3: expressionList에서 삭제 중 오류 발생");
-      return;
-    }
-
-    toast.success("삭제 완료");
-    getExpressionList();
-    toggleExpressionRefresh();
-    setSelectionType(null)
-    setSelectedText("")
-  };
-
-  const handleSave = async () => {
-    const changeText = editor.getText();
-
-    // Fetch the current expressionList
-    const { data: currentExpressionList, error: fetchError } = await supabase
-      .from("expressionList")
-      .select("*")
-      .in("id", expression.expressionList);
-
-    if (fetchError) {
-      toast.error("단어 목록을 가져오는 데 실패했습니다.");
-      return;
-    }
-
-    // Filter out IDs of words that are no longer in the changeText
-    const updatedExpressionList = currentExpressionList
-      .filter((word) => changeText.includes(word.title))
-      .map((word) => word.id);
-
-    // Update the chunk text
-    const { error: updateError } = await supabase
-      .from("chunks")
-      .update({ chunkText: changeText })
-      .eq("id", expression.chunkId.id);
-
-    if (updateError) {
-      toast.error("저장 실패");
-      return;
-    }
-
-    console.log('updatedExpressionList:', updatedExpressionList)
-
-    // Update the expressionList in the database
-    const { error: listUpdateError } = await supabase
-      .from("expressionAnalysis")
-      .update({ expressionList: updatedExpressionList })
-      .eq("id", expression.id);
-
-    if (listUpdateError) {
-      toast.success("수정 완료");
+    const { data, error } = await supabase.from("expressionList").insert({
+      title: selectedText,
+      category: "",
+      booksId: booksId,
+      chapterId: articleId,
+      description: "",
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("단어 추가 완료");
       getExpression();
+      setChangeFlag((prev) => !prev);
+    }
+  };
+  const handleSave = async () => {
+    console.log("editor", editor.getText());
+    const { data, error } = await supabase
+      .from("chunks")
+      .update({ chunkText: editor.getText() })
+      .eq("id", expression.chunkId.id);
+    if (error) {
+      toast.error("저장 실패");
     } else {
       toast.success("수정 완료");
       getExpression();
     }
   };
-  console.log('expression:', expression)
-  console.log('expressionList:', expressionList)
- 
 
   const highlightText = (text, words, expressionList) => {
     if (!text) return text;
 
     let highlightedText = text;
-    console.log("words:", words);
+
     if (words.length) {
       const wordsRegex = new RegExp(`(${words.join("|")})`, "gi");
-
       highlightedText = highlightedText.replace(
         wordsRegex,
         (match) =>
@@ -186,8 +89,7 @@ function SimpleTiptap({
 
   const highlightedChunkText = highlightText(
     expression?.chunkId?.chunkText,
-    // filteredExpressionList.map((word1) => word1.title)
-    myWords.map((word1) => word1.title)
+    filteredExpressionList.map((word1) => word1.title)
   );
 
   const handleTextSelection = (event) => {
@@ -247,17 +149,6 @@ function SimpleTiptap({
     };
   }, [expression.chunkId.id]);
 
-  useEffect(() => {
-    if (expression?.expressionList && expressionList) {
-      const matchedWords = expressionList.filter((dict) =>
-        expression.expressionList.includes(dict.id)
-      );
-      setMyWords(matchedWords);
-    }
-  }, [expression, expressionList]);
-
-  console.log("myWords:", myWords);
-
   return (
     <div className="w-full h-full flex flex-col gap-y-2">
       <div className="flex w-full h-full justify-between items-center gap-x-2">
@@ -265,7 +156,6 @@ function SimpleTiptap({
           className={`chunks border "border-gray-300" w-full h-full rounded-lg p-2`}
           dangerouslySetInnerHTML={{ __html: highlightedChunkText }}
           onMouseUp={handleTextSelection}
-          data-chunk-id={expression.chunkId.id}
         />
         <Button
           className="text-gray-400"
@@ -329,37 +219,16 @@ function SimpleTiptap({
                     size="sm"
                     color="primary"
                     variant="flat"
-                    onClick={() => {
-                      handleAddWord();
-                      handleClosePopover();
-                      setSelectedExpressionId(expression.id);
-                    }}
+                    onClick={handleAddWord}
                   >
                     추가
                   </Button>
                 ) : (
                   <div className="flex flex-row gap-x-2">
-                    <Button
-                      onClick={() => {
-                        handleEditWord();
-                        handleClosePopover();
-                        setSelectedExpressionId(expression.id);
-                      }}
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                    >
+                    <Button size="sm" color="primary" variant="flat">
                       수정
                     </Button>
-                    <Button
-                      onClick={() => {
-                        handleDeleteWord();
-                        handleClosePopover();
-                      }}
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                    >
+                    <Button size="sm" color="primary" variant="flat">
                       삭제
                     </Button>
                   </div>

@@ -69,7 +69,7 @@ function SpeakerModal({ isFixed, booksId, chapterId, data, setData }) {
   return (
     <>
       <Button
-        className="col-span-12 md:col-span-3"
+        className="col-span-12 md:col-span-4"
         onClick={onOpen1}
         color="primary"
       >

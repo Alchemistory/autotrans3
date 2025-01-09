@@ -6,17 +6,19 @@ import Tiptap from "./Tiptap";
 import { Spinner } from "@nextui-org/react";
 import { ToastContainer, toast } from "react-toastify";
 import { useSelectedFilter } from "@/store/useSelectedFilter"
-
-
+import { useExpressionRefresh } from "@/store/useExpressionRefresh";
+import { useExpressions } from "@/store/useExpressions";
+import { useExpressionList } from "@/store/useExpressionList";
 function Expressions({ booksId, articleId }) {
   const supabase = createClient();
-  const [expressions, setExpressions] = useState([]);
-  const [expressionList, setExpressionList] = useState([]);
+  const {expressions, setExpressions} = useExpressions();
+  const {expressionList, setExpressionList} = useExpressionList();
   const [filteredExpressionList, setFilteredExpressionList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [changeFlag, setChangeFlag] = useState(false);
   const { selectedFilter } = useSelectedFilter();
   const [activePopover, setActivePopover] = useState(null);
+  const {expressionRefresh, toggleExpressionRefresh} = useExpressionRefresh();
 
   const getExpressionList = async () => {
     const { data, error } = await supabase
@@ -36,7 +38,7 @@ function Expressions({ booksId, articleId }) {
     } else {
       setFilteredExpressionList(expressionList.filter(expression => selectedFilter.includes(expression.category)));
     }
-  }, [selectedFilter, expressionList, changeFlag]);
+  }, [selectedFilter, expressionList, changeFlag, expressionRefresh]);
 
   console.log('filteredExpressionList:',filteredExpressionList)
 
@@ -51,6 +53,7 @@ function Expressions({ booksId, articleId }) {
       )
       .eq("booksId", booksId)
       .eq("chapterId", articleId)
+      .order('id', { ascending: true })
     
     if (error) console.log(error);
     setExpressions(data);
@@ -60,17 +63,10 @@ function Expressions({ booksId, articleId }) {
   useEffect(() => {
     getExpressions();
     getExpressionList();
-  }, [changeFlag]);
-  console.log("expressions:", expressions);
-  console.log("expressionList:", expressionList);
+  }, [changeFlag, expressionRefresh]);
 
   return (
     <div className="flex flex-col gap-y-3">
-      <ToastContainer
-        autoClose={1000}
-        hideProgressBar={false}
-        position="top-center"
-      />
       {isLoading ? (
         <div className="flex justify-center items-center h-full">
           <Spinner size="lg" />

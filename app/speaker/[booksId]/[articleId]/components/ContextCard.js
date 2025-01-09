@@ -26,7 +26,8 @@ import { ToastContainer, toast } from "react-toastify";
 import { usePathname } from "next/navigation";
 import SpeakerModal from "./SpeakerModal";
 import { FaPlus, FaMinus } from "react-icons/fa";
-function ContextCard({ isFixed, booksId, chapterId }) {
+import { useBookName } from "@/store/useBookName";
+function ContextCard({ bookInfo, isFixed, booksId, chapterId }) {
   const supabase = createClient();
   const router = useRouter();
   const [data, setData] = useState([]);
@@ -34,6 +35,13 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const [changedData, setChangedData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mappingSpeakerCharacter, setMappingSpeakerCharacter] = useState([]);
+  const { bookName, setBookName } = useBookName();
+
+  useEffect(() => {
+    setBookName(bookInfo);
+  }, [bookInfo]);
+
+  console.log('bookName:',bookName)
 
   const fetchData = async () => {
     const { data, error } = await supabase
@@ -162,13 +170,13 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const handleConfirm = async () => {
     const { error:error1 } = await supabase
       .from("chapterList")
-      .update({ isFixed: true })
+      .update({ isFixedSpeaker: true })
       .eq("booksId", booksId)
       .eq("id", chapterId);
     
     const { error:error2 } = await supabase
     .from("mappingSpeakerCharacter")
-    .update({ isFixed: true })
+    .update({ isFixedSpeaker: true })
     .eq("booksId", booksId)
     .eq("chapterId", chapterId);
     
@@ -186,13 +194,13 @@ function ContextCard({ isFixed, booksId, chapterId }) {
   const cancelConfirm=async()=>{
     const { error:error1 } = await supabase
     .from("chapterList")
-    .update({ isFixed: false })
+    .update({ isFixedSpeaker: false })
     .eq("booksId", booksId)
     .eq("id", chapterId);
 
     const { error:error2 } = await supabase
     .from("mappingSpeakerCharacter")
-    .update({ isFixed: false })
+    .update({ isFixedSpeaker: false })
     .eq("booksId", booksId)
     .eq("chapterId", chapterId);
 
@@ -384,13 +392,13 @@ function ContextCard({ isFixed, booksId, chapterId }) {
         <Button
           color="primary"
           variant="bordered"
-          className="col-span-12 md:col-span-3"
+          className="col-span-12 md:col-span-4"
           onClick={() => router.back()}
         >
           뒤로
         </Button>
         <Button
-          className="col-span-12 md:col-span-3"
+          className="col-span-12 md:col-span-4"
           onClick={handleSaveData}
           color="primary"
           isDisabled={isFixed}
@@ -398,16 +406,8 @@ function ContextCard({ isFixed, booksId, chapterId }) {
           저장
         </Button>
         <SpeakerModal mappingSpeakerCharacter={mappingSpeakerCharacter} setMappingSpeakerCharacter={setMappingSpeakerCharacter} isFixed={isFixed} booksId={booksId} chapterId={chapterId} data={data} setData={setData} />
-        {isFixed && (
-          <Button
-            onClick={cancelConfirm}
-            className="col-span-12 md:col-span-3"
-            color="danger"
-          >
-            취소
-          </Button>
-        )}
-        {!isFixed && (
+
+        {/* {!isFixed && (
           <Button
             onClick={handleConfirm}
           className="col-span-12 md:col-span-3"
@@ -416,7 +416,7 @@ function ContextCard({ isFixed, booksId, chapterId }) {
         >
           확정
         </Button>
-        )}
+        )} */}
         </div>
     </div>
   );

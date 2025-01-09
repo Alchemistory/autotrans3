@@ -21,6 +21,7 @@ const Tiptap = ({ booksId, articleId, chunk, dictionary, setDictionary}) => {
   const [isEditorVisible, setIsEditorVisible] = useState(false);
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+  const [myWords, setMyWords] = useState([])
 
   const handleAddWord = async () => {
     const { data, error } = await supabase.from("dictionaryList").insert({
@@ -45,19 +46,48 @@ const Tiptap = ({ booksId, articleId, chunk, dictionary, setDictionary}) => {
     content: chunk?.chunkId?.chunkText || "",
   });
 
-  const handleSave = async () => {
-    console.log("editor", editor.getText());
-    const { data, error } = await supabase
-      .from("chunks")
-      .update({ chunkText: editor.getText() })
-      .eq("id", chunk.chunkId.id);
-    if (error) {
-      toast.error("저장 실패");
-    } else {
-      toast.success("수정 완료");
-      fetchChunk(supabase,booksId, articleId);
+const handleSave = async () => {
+  const changeText = editor.getText();
+
+  // Find ids of words in myWords that are not in changeText
+  const idsToRemove = myWords
+    .filter(word => !changeText.includes(word.titleKR))
+    .map(word => word.id);
+
+  // Remove these ids from chunk.dictionaryList
+  const updatedDictionaryList = chunk.dictionaryList.filter(
+    id => !idsToRemove.includes(id)
+  );
+
+  const { data, error } = await supabase
+    .from("chunks")
+    .update({ 
+      chunkText: changeText,
+    })
+    .eq("id", chunk.chunkId.id);
+
+  if (error) {
+    toast.error("저장 실패");
+  } else {
+    toast.success("수정 완료");
+    fetchChunk(supabase, booksId, articleId);
+
+    // Check if updatedDictionaryList is different from the original
+    if (JSON.stringify(updatedDictionaryList) !== JSON.stringify(chunk.dictionaryList)) {
+      const { data: consistencyData, error: consistencyError } = await supabase
+        .from("consistencyAnalysis")
+        .update({ dictionaryList: updatedDictionaryList })
+        .eq("chunkId", chunk.chunkId.id);
+
+      if (consistencyError) {
+        console.error("Consistency update failed:", consistencyError);
+      } else {
+        console.log("Consistency updated successfully:", consistencyData);
+      }
     }
-  };
+  }
+};
+  
 
   const supabase = createClient();
   const getDictionary = async () => {
@@ -152,6 +182,15 @@ const Tiptap = ({ booksId, articleId, chunk, dictionary, setDictionary}) => {
       setPopoverVisible(false);
     }
   };
+
+  useEffect(() => {
+    if (chunk?.dictionaryList && dictionary) {
+      const matchedWords = dictionary.filter((dict) => 
+        chunk.dictionaryList.includes(dict.id)
+      );
+      setMyWords(matchedWords);
+    }
+  }, [chunk, dictionary]);
 
   return (
     <div className="w-full h-full flex flex-col gap-y-2">
