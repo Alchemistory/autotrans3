@@ -16,6 +16,7 @@ import { useExpressionRefresh } from "@/store/useExpressionRefresh";
 import { useSelectedExpressionId } from "@/store/useSelectedExpressionId";
 import { useExpressions } from "@/store/useExpressions";
 import { useExpressionList } from "@/store/useExpressionList";
+import { useChapterList } from "@/store/useChapterList";
 function ExpressionDetail({ booksId, articleId }) {
   const [data, setData] = useState({
     title: "",
@@ -32,6 +33,7 @@ function ExpressionDetail({ booksId, articleId }) {
   const { expressionVariation, setExpressionVariation } =
     useExpressionVariation();
   const { stageExpression, setStageExpression } = useStageExpression();
+  const { chapterList, setChapterList } = useChapterList();
   const [myExpression, setMyExpression] = useState({});
   const [myWords, setMyWords] = useState({});
   const handleCopy = () => {
@@ -207,12 +209,12 @@ function ExpressionDetail({ booksId, articleId }) {
         </div>
         <div className="row-span-2 flex justify-center items-end">
           <Button
-            isDisabled={!stageExpression}
+            isDisabled={!stageExpression || chapterList?.isFixedExpression}
             color="primary"
             className="w-full"
             onClick={handleAddWord}
           >
-            저장하기
+            적용하기
           </Button>
         </div>
       </div>

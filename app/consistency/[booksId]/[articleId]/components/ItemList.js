@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@nextui-org/react";
 import { ToastContainer, toast } from "react-toastify";
 import { useApplyFlag } from "@/store/useApplyFlag";
+import { useChapterList } from "@/store/useChapterList";
 function ItemList({ booksId, articleId }) {
   const { selectedChunk, setSelectedChunk, clearSelectedChunk } = useSelectedChunk();
   const { chunks, setChunks, fetchChunk } = useChunk();
@@ -22,6 +23,9 @@ function ItemList({ booksId, articleId }) {
   const [itemList, setItemList] = useState([]);
   const supabase = createClient();
   const { applyFlag, toggleApplyFlag } = useApplyFlag();
+  const [isFixed, setIsFixed] = useState(false);
+  const { chapterList, setChapterList } = useChapterList();
+
 
   const filterDictionaryOld = async () => {
     // Get chunks that match selectedChunk ids
@@ -191,6 +195,7 @@ function ItemList({ booksId, articleId }) {
       </div>
       <div className="h-16 flex items-center ">
         <Button
+          isDisabled={chapterList?.isFixedConsistency}
           onClick={() => {
             handleApply();
             toggleApplyFlag();

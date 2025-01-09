@@ -6,15 +6,25 @@ import { usePathname } from "next/navigation";
 import { useBookName } from "@/store/useBookName";
 import { ToastContainer, toast } from "react-toastify";
 import { createClient } from "@/utils/supabase/client";
-
+import { useChapterList } from "@/store/useChapterList";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@nextui-org/react";
 function ProgrssSection() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
   const router = useRouter();
   const pathname = usePathname();
   const { bookName } = useBookName();
   const supabase = createClient();
   const [booksId, setBooksId] = useState(null);
   const [chapterId, setChapterId] = useState(null);
-  const [chapterList, setChapterList] = useState(null);
+  const { chapterList, setChapterList } = useChapterList();
   const [isFixed, setIsFixed] = useState(false);
   const [fixedStates, setFixedStates] = useState("");
 
@@ -30,6 +40,9 @@ function ProgrssSection() {
       console.log("Error fetching chapter list:", error);
     } else {
       setChapterList(data);
+      if (data?.[fixedStates]) {
+        onOpen();
+      }
     }
   };
   useEffect(() => {
@@ -78,6 +91,7 @@ function ProgrssSection() {
       console.log(error2);
     } else {
       router.refresh();
+      fetchChapterList();
     }
   };
   console.log("fixedStates:", fixedStates);
@@ -106,6 +120,26 @@ function ProgrssSection() {
   if (pathname.includes("expression")) {
     return (
       <>
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">알림</ModalHeader>
+                <ModalBody>
+                  <p>
+                    현재 확정 상태로 변경 필요 시 우측 상단에 취소 버튼 클릭 후
+                    수정 바랍니다.
+                  </p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="primary" onPress={onClose}>
+                    확인
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
         <div className="flex flex-row gap-4 justify-between items-center w-full px-2">
           <div>
             <h1 className="text-2xl font-bold">표현 검토</h1>
@@ -120,10 +154,7 @@ function ProgrssSection() {
           </div>
           <div>
             {chapterList?.isFixedExpression ? (
-              <Button
-                color="danger"
-                onClick={cancelConfirm}
-              >
+              <Button color="danger" onClick={cancelConfirm}>
                 취소
               </Button>
             ) : (
@@ -131,8 +162,8 @@ function ProgrssSection() {
                 isDisabled={chapterList?.isFixedExpression}
                 color="danger"
                 onClick={handleConfirm}
-            >
-              확정
+              >
+                확정
               </Button>
             )}
           </div>
@@ -142,6 +173,26 @@ function ProgrssSection() {
   } else if (pathname.includes("consistency")) {
     return (
       <>
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">알림</ModalHeader>
+                <ModalBody>
+                  <p>
+                    현재 확정 상태로 변경 필요 시 우측 상단에 취소 버튼 클릭 후
+                    수정 바랍니다.
+                  </p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="primary" onPress={onClose}>
+                    확인
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
         <div className="flex flex-row gap-4 justify-between items-center w-full px-2">
           <div>
             <h1 className="text-2xl font-bold">일관성 검토</h1>
@@ -156,10 +207,7 @@ function ProgrssSection() {
           </div>
           <div>
             {chapterList?.isFixedConsistency ? (
-              <Button
-                color="danger"
-                onClick={cancelConfirm}
-              >
+              <Button color="danger" onClick={cancelConfirm}>
                 취소
               </Button>
             ) : (
@@ -167,7 +215,7 @@ function ProgrssSection() {
                 isDisabled={chapterList?.isFixedConsistency}
                 color="danger"
                 onClick={handleConfirm}
-            >
+              >
                 확정
               </Button>
             )}
@@ -178,6 +226,26 @@ function ProgrssSection() {
   } else if (pathname.includes("speaker")) {
     return (
       <>
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">알림</ModalHeader>
+                <ModalBody>
+                  <p>
+                    현재 확정 상태로 변경 필요 시 우측 상단에 취소 버튼 클릭 후
+                    수정 바랍니다.
+                  </p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="primary" onPress={onClose}>
+                    확인
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
         <div className="flex flex-row gap-4 justify-between items-center w-full px-2">
           <div>
             <h1 className="text-2xl font-bold">문장유형 검토</h1>
@@ -192,10 +260,7 @@ function ProgrssSection() {
 
           <div>
             {chapterList?.isFixedSpeaker ? (
-              <Button
-                color="danger"
-                onClick={cancelConfirm}
-              >
+              <Button color="danger" onClick={cancelConfirm}>
                 취소
               </Button>
             ) : (
@@ -203,8 +268,8 @@ function ProgrssSection() {
                 isDisabled={chapterList?.isFixedSpeaker}
                 color="danger"
                 onClick={handleConfirm}
-            >
-              확정
+              >
+                확정
               </Button>
             )}
           </div>

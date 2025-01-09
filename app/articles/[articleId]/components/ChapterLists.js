@@ -68,7 +68,7 @@ export default function ChapterLists({ articleId }) {
   useEffect(() => {
     getChapterList();
   }, []);
-  console.log('chapterList', chapterList)
+  console.log("chapterList", chapterList);
 
   return (
     <div className="w-full h-full">
@@ -85,22 +85,28 @@ export default function ChapterLists({ articleId }) {
           <Card className="w-full h-36 md:h-24" key={index}>
             <CardBody className="grid grid-cols-12 justify-between items-center px-5 md:px-20">
               <div className="col-span-12 md:col-span-6">
-                <p className="text-center md:text-left">{chapter.chapterNumber}화</p>
+                <p className="text-center md:text-left">
+                  {chapter.chapterNumber}화
+                </p>
                 <p className="text-center md:text-left">{chapter.titleKR}</p>
               </div>
               <div className="col-span-12 md:col-span-6 flex flex-row gap-5 justify-center md:justify-end items-center">
                 <div className="flex flex-col md:flex-row justify-center items-center">
-                  <Chip color="warning">
-                    {chapter.status === "ai" &&
-                      "문장 유형 및 발화자 AI 분석 필요"}
-                    {chapter.status === "aiUser" &&
-                      "문장 유형 및 발화자 유저 검토 필요"}
-                    {chapter.status === "consistency" &&
-                      "일관성 및 표현 AI 분석 필요"}
-                    {chapter.status === "consistencyUser" &&
-                      "일관성 및 표현 유저 검토 필요"}
-                    {chapter.status === "complete" && "원문 분석 완료"}
-                  </Chip>
+                  <div className="flex flex-row gap-2">
+                  {chapter.isFixedSpeaker === false && (
+                    <Chip className="text-white" color="primary">문장유형 검토 필요</Chip>
+                  )}
+                  {chapter.isFixedSpeaker === true && chapter.isFixedConsistency === false && (
+                    <Chip className="text-white" color="secondary">일관성 검토 필요</Chip>
+                  )}
+                  {chapter.isFixedSpeaker === true && chapter.isFixedExpression === false && (
+                    <Chip className="text-white" color="warning">표현 검토 필요</Chip>
+                  )}
+                  {chapter.isFixedSpeaker === true && chapter.isFixedConsistency === true && chapter.isFixedExpression === true && (
+                    <Chip className="text-white" color="success">완료</Chip>
+                  )}
+                  </div>
+
                   <Button
                     onClick={() => {
                       router.push(`/speaker/${articleId}/${chapter.id}`);
@@ -108,7 +114,6 @@ export default function ChapterLists({ articleId }) {
                     className="ml-0 md:ml-5"
                     color="primary"
                     variant="light"
-                    
                   >
                     문장유형 검토
                   </Button>
@@ -116,7 +121,6 @@ export default function ChapterLists({ articleId }) {
                     onClick={() => {
                       router.push(`/consistency/${articleId}/${chapter.id}`);
                     }}
-
                     className="ml-0 md:ml-5"
                     color="primary"
                     variant="light"
