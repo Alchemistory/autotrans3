@@ -37,11 +37,11 @@ export default async function Login(props) {
               variant="bordered"
             />
 
-            <div className="flex items-center justify-between px-1 py-2">
+            {/* <div className="flex items-center justify-between px-1 py-2">
               <Link href='/forgot-password' className="" size="sm">
                 비밀번호를 까먹었어요?
               </Link>
-            </div>
+            </div> */}
             <Button formAction={signInAction} color="primary" type="submit">
               로그인
             </Button>
