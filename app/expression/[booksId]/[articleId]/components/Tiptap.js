@@ -15,7 +15,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useStageExpression } from "@/store/useStageExpression";
 import { useSelectedExpressionId } from "@/store/useSelectedExpressionId";
 import { useExpressionRefresh } from "@/store/useExpressionRefresh";
-
+import { useSelectionType } from "@/store/useSelectionType";
 function SimpleTiptap({
   booksId,
   articleId,
@@ -40,7 +40,7 @@ function SimpleTiptap({
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [selectedText, setSelectedText] = useState("");
-  const [selectionType, setSelectionType] = useState(null);
+  const { selectionType, setSelectionType } = useSelectionType();
   const { stageExpression, setStageExpression } = useStageExpression();
   const [myWords, setMyWords] = useState([]);
   const { expressionRefresh, toggleExpressionRefresh } = useExpressionRefresh();
@@ -53,67 +53,83 @@ function SimpleTiptap({
   const handleEditWord = async () => {
     setStageExpression(selectedText);
   };
-
   const handleDeleteWord = async () => {
-    console.log('selectedText:', selectedText);
+    // 선택된 단어를 포함하고 있는 span 요소를 찾습니다
+
     const { data: expressionData, error: expressionError } = await supabase
       .from("expressionList")
       .select("*")
-      .eq("title", selectedText)
-      .single();
-    console.log('expressionData:', expressionData);
+      .eq("title", selectedText);
     if (expressionError) {
       toast.error("삭제 실패1: 항목을 찾을 수 없습니다.");
       return;
     }
-
+    console.log("expressionData:", expressionData);
     const expressionId = expressionData.id;
 
+    // Find all IDs where title matches selectedText
+    const expressionIds = expressionData
+      .filter((expression) => expression.title === selectedText)
+      .map((expression) => expression.id);
+
+    if (expressionIds.length === 0) {
+      toast.error("삭제 실패: 일치하는 항목을 찾을 수 없습니다.");
+      return;
+    }
+
+    console.log("expressionIds:", expressionIds);
     // Fetch all entries from expressionAnalysis where booksId and chapterId match
     const { data: analysisData, error: analysisError } = await supabase
       .from("expressionAnalysis")
       .select("*")
       .eq("booksId", booksId)
-      .eq("chapterId", articleId);
-
+      .eq("chapterId", articleId)
+      .eq("id",activePopover)
+      .single()
+    console.log('analysisData:',analysisData)
     if (analysisError) {
       toast.error("삭제 실패2: 분석 항목을 찾을 수 없습니다.");
       return;
     }
 
-    // Iterate over each entry and update the expressionList
-    for (const analysisEntry of analysisData) {
-      const updatedExpressionList = analysisEntry.expressionList.filter(
-        (id) => id !== expressionId
-      );
+    // Get the current expressionList from analysisData
+    const currentExpressionList = analysisData.expressionList || [];
+    
+    const removedIds = currentExpressionList.filter(id => expressionIds.includes(id));
 
-      const { error: updateError } = await supabase
-        .from("expressionAnalysis")
-        .update({ expressionList: updatedExpressionList })
-        .eq("id", analysisEntry.id);
+    // Filter out the expressionIds from the current list
+    const updatedExpressionList = currentExpressionList.filter(
+      (id) => !expressionIds.includes(id)
+    );
 
-      if (updateError) {
-        toast.error("삭제 실패: 업데이트 중 오류 발생");
+    const { error: updateError } = await supabase
+      .from("expressionAnalysis")
+      .update({ expressionList: updatedExpressionList })
+      .eq("id", analysisData.id);
+
+    if (updateError) {
+      toast.error("삭제 실패: 업데이트 중 오류 발생");
+      return;
+    }
+    
+    // removedIds를 순차적으로 삭제
+    for (const id of removedIds) {
+      const { error: deleteError } = await supabase
+        .from("expressionList")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        toast.error(`삭제 실패3: expressionList에서 ID ${id} 삭제 중 오류 발생`);
         return;
       }
-    }
-
-    // Delete the word from expressionList
-    const { error: deleteError } = await supabase
-      .from("expressionList")
-      .delete()
-      .eq("id", expressionId);
-
-    if (deleteError) {
-      toast.error("삭제 실패3: expressionList에서 삭제 중 오류 발생");
-      return;
     }
 
     toast.success("삭제 완료");
     getExpressionList();
     toggleExpressionRefresh();
-    setSelectionType(null)
-    setSelectedText("")
+    setSelectionType(null);
+    setSelectedText("");
   };
 
   const handleSave = async () => {
@@ -146,8 +162,6 @@ function SimpleTiptap({
       return;
     }
 
-    console.log('updatedExpressionList:', updatedExpressionList)
-
     // Update the expressionList in the database
     const { error: listUpdateError } = await supabase
       .from("expressionAnalysis")
@@ -162,15 +176,11 @@ function SimpleTiptap({
       getExpression();
     }
   };
-  console.log('expression:', expression)
-  console.log('expressionList:', expressionList)
- 
 
   const highlightText = (text, words, expressionList) => {
     if (!text) return text;
 
     let highlightedText = text;
-    console.log("words:", words);
     if (words.length) {
       const wordsRegex = new RegExp(`(${words.join("|")})`, "gi");
 
@@ -189,6 +199,7 @@ function SimpleTiptap({
     // filteredExpressionList.map((word1) => word1.title)
     myWords.map((word1) => word1.title)
   );
+  
 
   const handleTextSelection = (event) => {
     const selection = window.getSelection();
@@ -219,14 +230,18 @@ function SimpleTiptap({
     const handleMouseOver = (event) => {
       if (event.target.classList.contains("selected-word")) {
         const rect = event.target.getBoundingClientRect();
-        setPopoverPosition({
-          top: rect.top + window.scrollY,
-          left: rect.left + window.scrollX,
-        });
-        setSelectedText(event.target.textContent);
-        setPopoverVisible(true);
-        setActivePopover(expression.chunkId.id);
-        setSelectionType("hover");
+        const chunkElement = event.target.closest(".chunks");
+        if (chunkElement) {
+          const chunkId = chunkElement.dataset.chunkId;
+          setPopoverPosition({
+            top: rect.top + window.scrollY,
+            left: rect.left + window.scrollX,
+          });
+          setSelectedText(event.target.textContent);
+          setPopoverVisible(true);
+          setActivePopover(Number(chunkId));
+          setSelectionType("hover");
+        }
       }
     };
 
@@ -245,7 +260,7 @@ function SimpleTiptap({
       document.removeEventListener("mouseover", handleMouseOver);
       document.removeEventListener("mouseout", handleMouseOut);
     };
-  }, [expression.chunkId.id]);
+  }, []);
 
   useEffect(() => {
     if (expression?.expressionList && expressionList) {
@@ -256,7 +271,7 @@ function SimpleTiptap({
     }
   }, [expression, expressionList]);
 
-  console.log("myWords:", myWords);
+
 
   return (
     <div className="w-full h-full flex flex-col gap-y-2">
@@ -264,7 +279,10 @@ function SimpleTiptap({
         <div
           className={`chunks border "border-gray-300" w-full h-full rounded-lg p-2`}
           dangerouslySetInnerHTML={{ __html: highlightedChunkText }}
-          onMouseUp={handleTextSelection}
+          onMouseUp={() => {
+            handleTextSelection();
+            setSelectedExpressionId(expression.id);
+          }}
           data-chunk-id={expression.chunkId.id}
         />
         <Button
@@ -296,9 +314,9 @@ function SimpleTiptap({
           </Button>
         </div>
       )}
-      {activePopover === expression.chunkId.id && selectedText && (
+      {activePopover  && selectedText && (
         <Popover
-          isOpen={activePopover === expression.chunkId.id}
+          isOpen={activePopover}
           placement="top"
           offset={5}
         >

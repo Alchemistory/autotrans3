@@ -17,8 +17,6 @@ import { useSelectedExpressionId } from "@/store/useSelectedExpressionId";
 import { useExpressions } from "@/store/useExpressions";
 import { useExpressionList } from "@/store/useExpressionList";
 import { useChapterList } from "@/store/useChapterList";
-import { useActivePopoverId } from "@/store/useActivePopoverId";
-import { useSelectionType } from "@/store/useSelectionType";
 function ExpressionDetail({ booksId, articleId }) {
   const [data, setData] = useState({
     title: "",
@@ -31,21 +29,19 @@ function ExpressionDetail({ booksId, articleId }) {
   const { expressions, setExpressions } = useExpressions();
   const { expressionList, setExpressionList } = useExpressionList();
   const { expressionRefresh, toggleExpressionRefresh } = useExpressionRefresh();
-  const { selectedExpressionId, setSelectedExpressionId } =
-    useSelectedExpressionId();
+  const { selectedExpressionId, setSelectedExpressionId } = useSelectedExpressionId();
   const { expressionVariation, setExpressionVariation } =
     useExpressionVariation();
   const { stageExpression, setStageExpression } = useStageExpression();
   const { chapterList, setChapterList } = useChapterList();
   const [myExpression, setMyExpression] = useState({});
   const [myWords, setMyWords] = useState({});
-  const { selectionType, setSelectionType } = useSelectionType();
-  const { activePopoverId, setActivePopoverId } = useActivePopoverId();
-
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedDescription);
   };
 
+
+  
   const supabase = createClient();
 
   useEffect(() => {
@@ -56,6 +52,7 @@ function ExpressionDetail({ booksId, articleId }) {
       setMyExpression(matchedWord || {});
     }
   }, [expressions, selectedExpressionId]);
+
 
   useEffect(() => {
     const fetchExpressionData = async () => {
@@ -82,91 +79,71 @@ function ExpressionDetail({ booksId, articleId }) {
 
     fetchExpressionData();
   }, [stageExpression, booksId, articleId]);
+  
+
 
   const handleAddWord = async () => {
-    const { data, error } = await supabase
-      .from("expressionList")
-      .insert({
-        title: stageExpression,
-        category: selectedCategory,
-        booksId: booksId,
-        chapterId: articleId,
-        description: selectedDescription,
-      })
-      .select();
+    const { data, error } = await supabase.from("expressionList").insert({
+      title: stageExpression,
+      category: selectedCategory,
+      booksId: booksId,
+      chapterId: articleId,
+      description: selectedDescription,
+    }).select();
 
     if (error) {
       toast.error(error.message);
     } else {
       if (data && data.length > 0) {
         const insertedId = data[0].id;
-
+        
         // Fetch all entries from expressionAnalysis where booksId and chapterId match
         const { data: analysisData, error: analysisError } = await supabase
           .from("expressionAnalysis")
           .select("*,chunkId(*)")
           .eq("booksId", booksId)
-          .eq("chapterId", articleId)
-          .eq("id", selectedExpressionId)
-          .single();
+          .eq("chapterId", articleId);
 
-        // Iterate over each entry to update their expressionList
-        // Check if the chunkText contains the stageExpression
-        // Update the expressionList with the new insertedId
-        console.log("analysisData:", analysisData);
-        const updatedList = [
-          ...new Set([...analysisData.expressionList, insertedId]),
-        ];
+        if (analysisError) {
+          toast.error(analysisError.message);
+        } else if (analysisData) {
+          // Iterate over each entry to update their expressionList
+          for (const entry of analysisData) {
+            // Check if the chunkText contains the stageExpression
+            if (entry.chunkId.chunkText.includes(stageExpression)) {
+              // Update the expressionList with the new insertedId
+              const updatedList = [...new Set([...entry.expressionList, insertedId])];
 
-        // Update the expressionAnalysis table with the new list for each entry
-        const { error: updateError } = await supabase
-          .from("expressionAnalysis")
-          .update({ expressionList: updatedList })
-          .eq("id", selectedExpressionId);
+              // Update the expressionAnalysis table with the new list for each entry
+              const { error: updateError } = await supabase
+                .from("expressionAnalysis")
+                .update({ expressionList: updatedList })
+                .eq("id", entry.id);
 
-        if (updateError) {
-          toast.error(updateError.message);
+              if (updateError) {
+                toast.error(updateError.message);
+              }
+            }
+          }
+          toast.success("표현 추가 및 분석 업데이트 완료");
         }
-        toast.success("표현 추가 및 분석 업데이트 완료");
       }
       setStageExpression(null);
       toggleExpressionRefresh();
     }
   };
+  
 
   const handleEditWord = async () => {
-    console.log('expressions:', expressions);
-    console.log('expressionList:', expressionList);
-    const { data: expressionData, error: expressionError } = await supabase
-      .from("expressionList")
-      .select("*")
-      .eq("booksId", booksId)
-      .eq("chapterId", articleId);
-
-    if (expressionError) {
-      console.log("Error fetching expression data:", expressionError);
-      return;
-    }
-    const targetExpression = expressions.find(expression => expression.id === activePopoverId);
-    console.log('targetExpression:', targetExpression);
-
-    const targetExpressionList = targetExpression.expressionList;
-    console.log('targetExpressionList:', targetExpressionList);
-
-    // Find the matching expression ID
-    const matchingExpressionId = expressionData.find(
-      expr => expr.title === stageExpression && targetExpressionList.includes(expr.id)
-    )?.id;
-    
-    console.log('matchingExpressionId:', matchingExpressionId);
-
     const { data, error } = await supabase
       .from("expressionList")
       .update({
         category: selectedCategory,
         description: selectedDescription,
       })
-      .eq("id", matchingExpressionId);
+      .eq("title", stageExpression)
+      .eq('booksId', booksId)
+      .eq('chapterId', articleId)
 
     if (error) {
       toast.error(error.message);
@@ -231,25 +208,14 @@ function ExpressionDetail({ booksId, articleId }) {
           ) : null}
         </div>
         <div className="row-span-2 flex justify-center items-end">
-          {selectionType !== "drag" ? (
-            <Button
-              isDisabled={!stageExpression || chapterList?.isFixedExpression}
-              color="primary"
-              className="w-full"
-              onClick={handleEditWord}
-            >
-              적용하기(수정)
-            </Button>
-          ) : (
-            <Button
-              isDisabled={!stageExpression || chapterList?.isFixedExpression}
-              color="primary"
-              className="w-full"
-              onClick={handleAddWord}
-            >
-              적용하기(추가)
-            </Button>
-          )}
+          <Button
+            isDisabled={!stageExpression || chapterList?.isFixedExpression}
+            color="primary"
+            className="w-full"
+            onClick={handleAddWord}
+          >
+            적용하기
+          </Button>
         </div>
       </div>
     </div>

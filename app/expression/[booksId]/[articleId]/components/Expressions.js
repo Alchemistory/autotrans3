@@ -9,6 +9,7 @@ import { useSelectedFilter } from "@/store/useSelectedFilter"
 import { useExpressionRefresh } from "@/store/useExpressionRefresh";
 import { useExpressions } from "@/store/useExpressions";
 import { useExpressionList } from "@/store/useExpressionList";
+import { useActivePopoverId } from "@/store/useActivePopoverId";
 function Expressions({ booksId, articleId }) {
   const supabase = createClient();
   const {expressions, setExpressions} = useExpressions();
@@ -19,6 +20,15 @@ function Expressions({ booksId, articleId }) {
   const { selectedFilter } = useSelectedFilter();
   const [activePopover, setActivePopover] = useState(null);
   const {expressionRefresh, toggleExpressionRefresh} = useExpressionRefresh();
+  const {activePopoverId, setActivePopoverId} = useActivePopoverId();
+
+  useEffect(() => {
+    if (activePopover !== null) {
+      setActivePopoverId(activePopover);
+    }
+  }, [activePopover]);
+
+  console.log("activePopoverId:", activePopoverId);
 
   const getExpressionList = async () => {
     const { data, error } = await supabase
@@ -40,7 +50,6 @@ function Expressions({ booksId, articleId }) {
     }
   }, [selectedFilter, expressionList, changeFlag, expressionRefresh]);
 
-  console.log('filteredExpressionList:',filteredExpressionList)
 
   const getExpressions = async () => {
     let { data, error } = await supabase
